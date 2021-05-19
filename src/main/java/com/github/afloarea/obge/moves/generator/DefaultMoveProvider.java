@@ -1,7 +1,8 @@
 package com.github.afloarea.obge.moves.generator;
 
+import com.github.afloarea.obge.DiceValues;
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.common.Move;
+import com.github.afloarea.obge.ObgMove;
 import com.github.afloarea.obge.layout.BoardColumn;
 import com.github.afloarea.obge.layout.ColumnSequence;
 
@@ -29,13 +30,13 @@ public final class DefaultMoveProvider implements PossibleMovesProvider {
     }
 
     @Override
-    public Stream<Move> streamPossibleMoves(List<Integer> dice, Direction direction) {
+    public Stream<ObgMove> streamPossibleMoves(List<Integer> dice, Direction direction) {
         this.currentDice = dice;
         this.currentDirection = direction;
         return filterMovesToMaximizeDiceValuesUsed(computePossibleMoves().distinct());
     }
 
-    private Stream<Move> computePossibleMoves() {
+    private Stream<ObgMove> computePossibleMoves() {
         final var reversed = new ArrayList<Integer>();
         if (isSimpleDice(currentDice)) {
             reversed.addAll(currentDice);
@@ -61,11 +62,11 @@ public final class DefaultMoveProvider implements PossibleMovesProvider {
                             .flatMap(column -> computeBasic(column, hops, currentDirection)));
         }
 
-        final Stream<Move> farthestColumnMoves = Stream.of(currentDice, reversed)
+        final Stream<ObgMove> farthestColumnMoves = Stream.of(currentDice, reversed)
                 .flatMap(hops -> computePermissive(firstColumn, hops, currentDirection));
 
         final var collectableCalculator = noncollectablePieces == 0 ? strictCalculator : basicMoveCalculator;
-        final Stream<Move> potentiallyCollectableColumnMoves = Stream.of(currentDice, reversed)
+        final Stream<ObgMove> potentiallyCollectableColumnMoves = Stream.of(currentDice, reversed)
                 .flatMap(hops -> availableColumns.subList(1, availableColumns.size()).stream()
                         .flatMap(column -> computeMoves(collectableCalculator, column, hops, currentDirection)));
 
@@ -76,27 +77,27 @@ public final class DefaultMoveProvider implements PossibleMovesProvider {
         return Objects.equals(column.getId(), columnSequence.getSuspendedColumn(currentDirection).getId());
     }
 
-    private Stream<Move> computeMoves(
+    private Stream<ObgMove> computeMoves(
             MoveCalculator calculator, BoardColumn from, List<Integer> hops, Direction direction) {
         return calculator.computeMovesFromStart(columnSequence.getColumnIndex(from, direction), hops, direction);
     }
 
-    private Stream<Move> computeBasic(BoardColumn from, List<Integer> hops, Direction direction) {
+    private Stream<ObgMove> computeBasic(BoardColumn from, List<Integer> hops, Direction direction) {
         return computeMoves(basicMoveCalculator, from, hops, direction);
     }
-    private Stream<Move> computePermissive(BoardColumn from, List<Integer> hops, Direction direction) {
+    private Stream<ObgMove> computePermissive(BoardColumn from, List<Integer> hops, Direction direction) {
         return computeMoves(permissiveCalculator, from, hops, direction);
     }
 
-    private Stream<Move> filterMovesToMaximizeDiceValuesUsed(Stream<Move> originalMoves) {
+    private Stream<ObgMove> filterMovesToMaximizeDiceValuesUsed(Stream<ObgMove> originalMoves) {
         if (!isSimpleDice(currentDice)) {
             return originalMoves;
         }
 
         // group by used dice values combinations
-        final Map<Set<Integer>, List<Move>> movesByDice = originalMoves
-                .collect(Collectors.groupingBy(move -> new HashSet<>(move.getDistances())));
-        final Stream<Move> moves = movesByDice.values().stream().flatMap(Collection::stream);
+        final Map<Set<Integer>, List<ObgMove>> movesByDice = originalMoves
+                .collect(Collectors.groupingBy(move -> buildDiceSet(move.getDiceValues())));
+        final Stream<ObgMove> moves = movesByDice.values().stream().flatMap(Collection::stream);
 
         if (movesByDice.keySet().size() != 2) {
             return moves;
@@ -110,21 +111,25 @@ public final class DefaultMoveProvider implements PossibleMovesProvider {
         return maximizeForCompositeMove(movesByDice, moves);
     }
 
-    private Stream<Move> maximizeForCompositeMove(Map<Set<Integer>, List<Move>> movesByDice, Stream<Move> moves) {
-        final var diceSet = Set.of(currentDice.get(0), currentDice.get(1));
-        final Set<String> viableColumnIds = movesByDice.get(diceSet).stream()
-                .map(move -> move.getSource().getId())
-                .collect(Collectors.toSet());
-
-        return moves.filter(move -> viableColumnIds.contains(move.getSource().getId()));
+    private Set<Integer> buildDiceSet(DiceValues diceValues) {
+        return diceValues.stream().boxed().collect(Collectors.toUnmodifiableSet());
     }
 
-    private Stream<Move> maximizeForSimpleMoves(Map<Set<Integer>, List<Move>> movesByDice, Stream<Move> moves) {
+    private Stream<ObgMove> maximizeForCompositeMove(Map<Set<Integer>, List<ObgMove>> movesByDice, Stream<ObgMove> moves) {
+        final var diceSet = Set.of(currentDice.get(0), currentDice.get(1));
+        final Set<String> viableColumnIds = movesByDice.get(diceSet).stream()
+                .map(ObgMove::getSource)
+                .collect(Collectors.toSet());
+
+        return moves.filter(move -> viableColumnIds.contains(move.getSource()));
+    }
+
+    private Stream<ObgMove> maximizeForSimpleMoves(Map<Set<Integer>, List<ObgMove>> movesByDice, Stream<ObgMove> moves) {
         final Integer firstDice = currentDice.get(0);
         final Integer secondDice = currentDice.get(1);
 
-        final var firstConstrained = findConstrainedColumn(movesByDice.get(Set.of(firstDice)));
-        final var secondConstrained = findConstrainedColumn(movesByDice.get(Set.of(secondDice)));
+        final var firstConstrained = findConstrainedColumnId(movesByDice.get(Set.of(firstDice)));
+        final var secondConstrained = findConstrainedColumnId(movesByDice.get(Set.of(secondDice)));
 
         if (firstConstrained.isPresent() && secondConstrained.isPresent()
                 || firstConstrained.isEmpty() && secondConstrained.isEmpty()) {
@@ -134,29 +139,29 @@ public final class DefaultMoveProvider implements PossibleMovesProvider {
         final String sourceColumnId;
         final Integer constrainedDice;
         if (firstConstrained.isPresent()) {
-            sourceColumnId = firstConstrained.get().getId();
+            sourceColumnId = firstConstrained.get();
             constrainedDice = firstDice;
         } else {
-            sourceColumnId = secondConstrained.get().getId();
+            sourceColumnId = secondConstrained.get();
             constrainedDice = secondDice;
         }
 
         // the other (non-constraining) dice value move must be removed from the constrained column if it's present
-        return moves.filter(move -> !move.getSource().getId().equals(sourceColumnId)
-                || move.getDistances().contains(constrainedDice));
+        return moves.filter(move -> !move.getSource().equals(sourceColumnId)
+                || move.getDiceValues().contains(constrainedDice));
     }
 
     private boolean isSimpleDice(List<Integer> dice) {
         return dice.size() == 2 && !dice.get(0).equals(dice.get(1));
     }
 
-    private Optional<BoardColumn> findConstrainedColumn(List<Move> original) {
+    private Optional<String> findConstrainedColumnId(List<ObgMove> original) {
         if (original.size() != 1) {
             return Optional.empty();
         }
 
         final var move = original.get(0);
-        if (move.getSource().getPieceCount() != 1) {
+        if (columnSequence.getColumnById(move.getSource()).getPieceCount() != 1) {
             return Optional.empty();
         }
         

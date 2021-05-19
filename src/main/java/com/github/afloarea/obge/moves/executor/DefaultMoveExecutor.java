@@ -1,9 +1,9 @@
 package com.github.afloarea.obge.moves.executor;
 
-import com.github.afloarea.obge.BgMove;
+import com.github.afloarea.obge.DiceValues;
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.ObgMove;
 import com.github.afloarea.obge.common.Constants;
-import com.github.afloarea.obge.common.Move;
 import com.github.afloarea.obge.layout.ColumnSequence;
 
 import java.util.ArrayList;
@@ -23,39 +23,40 @@ public final class DefaultMoveExecutor implements MoveExecutor {
     }
 
     @Override
-    public List<BgMove> executeMove(Move move, Direction direction) {
+    public List<ObgMove> executeMove(ObgMove move, Direction direction) {
         return split(move, direction)
                 .flatMap(gameMove -> performBasicMove(gameMove, direction))
                 .collect(Collectors.toList());
     }
 
-    private Stream<BgMove> split(Move move, Direction direction) {
-        final var splitMoves = new ArrayList<BgMove>();
+    private Stream<ObgMove> split(ObgMove move, Direction direction) {
+        final var splitMoves = new ArrayList<ObgMove>();
         int fromIndex = columns.getColumnIndex(move.getSource(), direction);
 
-        for (int distance : move.getDistances()) {
+        for (int distance : move.getDiceValues()) {
             final int newIndex = Math.min(fromIndex + distance, Constants.COLLECT_INDEX);
-            splitMoves.add(BgMove.of(
+            splitMoves.add(ObgMove.of(
                     columns.getColumn(fromIndex, direction).getId(),
-                    columns.getColumn(newIndex, direction).getId()));
+                    columns.getColumn(newIndex, direction).getId(),
+                    DiceValues.of(distance)));
             fromIndex = newIndex;
         }
 
         return splitMoves.stream();
     }
 
-    private Stream<BgMove> performBasicMove(BgMove move, Direction direction) {
+    private Stream<ObgMove> performBasicMove(ObgMove move, Direction direction) {
         final var sourceColumn = columns.getColumnById(move.getSource());
         final var targetColumn = columns.getColumnById(move.getTarget());
 
-        final var executedMoves = new ArrayList<BgMove>();
+        final var executedMoves = new ArrayList<ObgMove>();
         final var oppositeDirection = direction.reverse();
 
         if (targetColumn.getMovingDirectionOfElements() == oppositeDirection) {
             final var suspendColumn = columns.getSuspendedColumn(oppositeDirection);
             suspendColumn.addElement(oppositeDirection);
             targetColumn.removeElement();
-            executedMoves.add(BgMove.of(targetColumn.getId(), suspendColumn.getId()));
+            executedMoves.add(ObgMove.of(targetColumn.getId(), suspendColumn.getId(), DiceValues.NONE));
         }
 
         targetColumn.addElement(direction);

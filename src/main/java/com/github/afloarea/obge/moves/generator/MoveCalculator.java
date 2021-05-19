@@ -1,7 +1,7 @@
 package com.github.afloarea.obge.moves.generator;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.common.Move;
+import com.github.afloarea.obge.ObgMove;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -18,6 +18,6 @@ public interface MoveCalculator {
      * @param direction the direction
      * @return the possible moves
      */
-    Stream<Move> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction);
+    Stream<ObgMove> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction);
 
 }

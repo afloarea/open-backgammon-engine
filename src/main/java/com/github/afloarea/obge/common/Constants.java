@@ -7,5 +7,8 @@ public final class Constants {
     public static final int COLLECT_INDEX       = 25;
     public static final int HOME_START          = 19;
 
+    public static final int MIN_DICE = 1;
+    public static final int MAX_DICE = 6;
+
     private Constants() {}
 }

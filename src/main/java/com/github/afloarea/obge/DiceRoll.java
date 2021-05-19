@@ -5,12 +5,13 @@ import java.util.Random;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
+import static com.github.afloarea.obge.common.Constants.MAX_DICE;
+import static com.github.afloarea.obge.common.Constants.MIN_DICE;
+
 /**
  * A class representing a dice roll.
  */
 public final class DiceRoll {
-    private static final int MIN_DICE = 1;
-    private static final int MAX_DICE = 6;
     private static final Random RANDOM = new Random();
 
     private final int dice1;

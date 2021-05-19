@@ -1,73 +1,57 @@
 package com.github.afloarea.obge.impl;
 
-import com.github.afloarea.obge.BgBoard;
-import com.github.afloarea.obge.BgMove;
-import com.github.afloarea.obge.DiceRoll;
-import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AdvancedBgBoardTest {
-    private static final Map<Integer, String> IDS_BY_POSITION;
-
-    static {
-        final String identifiers = "ABCDEFGHIJKLXWVUTSRQPONM";
-        IDS_BY_POSITION = IntStream.range(0, identifiers.length()).boxed()
-                .collect(Collectors.toUnmodifiableMap(
-                        Function.identity(), index -> String.valueOf(identifiers.charAt(index))));
-    }
-
+class BasicObgEngineTest {
 
     @Test
     void boardHandlesSimpleRoll() {
-        final var board = BgBoard.build();
+        final var board = ObgEngine.create();
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildMove(0, 1));
-        board.execute(Direction.CLOCKWISE, buildMove(0, 2));
+        board.execute(Direction.CLOCKWISE, "A", "B");
+        board.execute(Direction.CLOCKWISE, "A", "C");
 
         assertTrue(board.isCurrentTurnDone());
     }
 
     @Test
     void boardHandlesDouble() {
-        final var board = BgBoard.build();
+        final var board = ObgEngine.create();
         final var diceResult = DiceRoll.of(2, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildMove(0, 2));
-        board.execute(Direction.CLOCKWISE, buildMove(2, 4));
-        board.execute(Direction.CLOCKWISE, buildMove(4, 6));
-        board.execute(Direction.CLOCKWISE, buildMove(0, 2));
+        board.execute(Direction.CLOCKWISE, "A", "C");
+        board.execute(Direction.CLOCKWISE, "C", "E");
+        board.execute(Direction.CLOCKWISE, "E", "G");
+        board.execute(Direction.CLOCKWISE, "G", "I");
 
         assertTrue(board.isCurrentTurnDone());
     }
 
     @Test
     void testCanEnter() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         }, 1, 0, 0, 0);
         final var diceResult = DiceRoll.of(1, 6);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        assertTrue(board.getPossibleMoves().contains(buildEnter(Direction.CLOCKWISE, 0)));
-        board.execute(Direction.CLOCKWISE, buildEnter(Direction.CLOCKWISE, 0));
+        assertTrue(board.getPossibleMoves().stream().anyMatch(move -> "SB".equals(move.getSource()) && "A".equals(move.getTarget())));
+        board.execute(Direction.CLOCKWISE, "SB", "A");
     }
 
     @Test
     void unableToEnter() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -81,7 +65,7 @@ class AdvancedBgBoardTest {
 
     @Test
     void testSuspend() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{-2, 0, 0, 0, 1, 4, 0, 3, 0, 0, 1, -5},
                         new int[]{+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, 4}
                 }
@@ -89,8 +73,8 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(4, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildMove(0, 4));
-        board.execute(Direction.CLOCKWISE, buildMove(0, 1));
+        board.execute(Direction.CLOCKWISE, "A", "E");
+        board.execute(Direction.CLOCKWISE, "A", "B");
         assertTrue(board.isCurrentTurnDone());
 
         final var secondDice = DiceRoll.of(6, 6);
@@ -101,7 +85,7 @@ class AdvancedBgBoardTest {
 
     @Test
     void testEnterWithSuspend() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{2, 2, 1, 2, 2, 2, 0, 2, 0, 0, 0, 0},
                         new int[]{-3, 2, 0, 0, 0, -5, 0, 0, 0, 0, 0, -5}
                 },
@@ -110,21 +94,23 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(4, 3);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        Assertions.assertEquals(Set.of(buildEnter(Direction.CLOCKWISE, 2)), board.getPossibleMoves());
-        board.execute(Direction.CLOCKWISE, buildEnter(Direction.CLOCKWISE, 2));
+        final var enterWith3 = ObgMove.of("SB", "C", DiceValues.of(3));
+        Assertions.assertEquals(Set.of(enterWith3), board.getPossibleMoves());
+        board.execute(Direction.CLOCKWISE, enterWith3);
         assertTrue(board.isCurrentTurnDone());
 
         final var secondDice = DiceRoll.of(6, 2);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, secondDice);
-        assertTrue(board.getPossibleMoves().contains(buildEnter(Direction.ANTICLOCKWISE, 22)));
-        board.execute(Direction.ANTICLOCKWISE, buildEnter(Direction.ANTICLOCKWISE, 22));
+        final var enterWith2 = ObgMove.of("SW", "N", DiceValues.of(2));
+        assertTrue(board.getPossibleMoves().contains(enterWith2));
+        board.execute(Direction.ANTICLOCKWISE, enterWith2);
         Assertions.assertFalse(board.isCurrentTurnDone());
     }
 
     @Test
     void testGameWon() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -133,16 +119,16 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(3, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildCollect(Direction.CLOCKWISE, 22));
-        board.execute(Direction.CLOCKWISE, buildCollect(Direction.CLOCKWISE, 21));
+        board.execute(Direction.CLOCKWISE, "N", "CB");
+        board.execute(Direction.CLOCKWISE, "O", "CB");
         assertTrue(board.isCurrentTurnDone());
         assertTrue(board.isGameComplete());
-        Assertions.assertEquals(Direction.CLOCKWISE, board.getWinningDirection());
+        Assertions.assertSame(Direction.CLOCKWISE, board.getWinningDirection());
     }
 
     @Test
     void collectWithHigh() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{4, 4, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-5, -2, -4, -4, 0, 0, 0, 0, 0, 0, 0, 0}
                 }
@@ -150,12 +136,15 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(6, 5);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        Assertions.assertEquals(Set.of(buildCollect(Direction.CLOCKWISE, 20)), board.getPossibleMoves());
+        Assertions.assertEquals(
+                Set.of(ObgMove.of("P", "CB", DiceValues.of(6)),
+                        ObgMove.of("P", "CB", DiceValues.of(5))),
+                board.getPossibleMoves());
     }
 
     @Test
     void testMoveAndCollect() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{2, 2, 0, 1, 1, 7, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -5, -2, -6, 0, -1, 0, 0, 0, 0}
                 },
@@ -164,8 +153,8 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(3, 5);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildMove(16, 19));
-        board.execute(Direction.CLOCKWISE, buildCollect(Direction.CLOCKWISE, 19));
+        board.execute(Direction.CLOCKWISE, "T", "Q");
+        board.execute(Direction.CLOCKWISE, "Q", "CB");
 
         assertTrue(board.isCurrentTurnDone());
         assertTrue(board.getPossibleMoves().isEmpty());
@@ -173,7 +162,7 @@ class AdvancedBgBoardTest {
 
     @Test
     void testForcedMove() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{-1, 2, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0},
                         new int[]{0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -183,12 +172,14 @@ class AdvancedBgBoardTest {
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
-        Assertions.assertEquals(Set.of(buildMove(0, 6), buildMove(20, 23)), board.getPossibleMoves());
+        Assertions.assertEquals(
+                Set.of(ObgMove.of("A", "G", DiceValues.of(6)), ObgMove.of("P", "M", DiceValues.of(3))),
+                board.getPossibleMoves());
     }
 
     @Test
     void testNonForcedMove() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{2, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, -1},
                         new int[]{-2, -3, -2, -2, -2, -3, 0, 0, 0, 0, 0, 1}
                 },
@@ -199,12 +190,12 @@ class AdvancedBgBoardTest {
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
         final var availableMoves = board.getPossibleMoves();
-        assertTrue(availableMoves.contains(buildMove(11, 12)));
+        assertTrue(availableMoves.contains(ObgMove.of("L", "X", DiceValues.of(1))));
     }
 
     @Test
     void testNonForcedWithCollect() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-2, -4, 0, 1, -3, -5, -1, 0, 0, 0, 0, 0}
                 },
@@ -213,14 +204,14 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, buildMove(17, 18));
+        board.execute(Direction.CLOCKWISE, ObgMove.of("S", "R", DiceValues.of(1)));
         final var availableMoves = board.getPossibleMoves();
-        assertTrue(availableMoves.contains(buildCollect(Direction.CLOCKWISE, 22)));
+        assertTrue(availableMoves.contains(ObgMove.of("N", "CB", DiceValues.of(2))));
     }
 
     @Test
     void testNonForceWithCollect2() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-2, -9, 0, 1, -3, 0, 0, -1, 0, 0, 0, 0}
                 },
@@ -229,25 +220,25 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(6, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        assertTrue(board.getPossibleMoves().contains(buildMove(16, 18)));
+        assertTrue(board.getPossibleMoves().contains(ObgMove.of("T", "R", DiceValues.of(2))));
     }
 
     @Test
     void testCompositeMove() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{2, 0, 0, 0, 0, 5, 0, 2, -1, 0, -1, -5},
                 new int[]{0, 0, 0, 0, -2, -4, 2, -2, 0, 0, 0, 4}
         });
         final var diceResult = DiceRoll.of(6, 5);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
-        board.execute(Direction.ANTICLOCKWISE, buildMove(12, 1));
+        board.execute(Direction.ANTICLOCKWISE, "X", "B");
         assertTrue(board.isCurrentTurnDone());
     }
 
     @Test
     void testCompositeNoCollect() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{0, 0, 3, 3, 2, 4, 3, 0, 0, 0, 0, 0},
                 new int[]{0, -5, -2, -1, -3, -3, 0, -1, 0, 0, 0, 0}
         });
@@ -261,8 +252,8 @@ class AdvancedBgBoardTest {
     }
 
     @Test
-    void testExecuteCollectWithHig() {
-        final var board = BoardFactory.build(new int[][]{
+    void testExecuteCollectWithHigh() {
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{0, 1, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -1, -2, -8, 0, 0, 0, 0, 0, 0}
                 },
@@ -271,27 +262,27 @@ class AdvancedBgBoardTest {
         final var diceResult = DiceRoll.of(6, 2);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
-        assertTrue(board.getPossibleMoves()
-                .contains(buildCollect(Direction.ANTICLOCKWISE, 4)));
-        board.execute(Direction.ANTICLOCKWISE, buildCollect(Direction.ANTICLOCKWISE, 4));
+        final var move = ObgMove.of("E", "CW", DiceValues.of(6));
+        assertTrue(board.getPossibleMoves().contains(move));
+        board.execute(Direction.ANTICLOCKWISE, move);
         Assertions.assertFalse(board.isCurrentTurnDone());
     }
 
     @Test
     void testBasicMove() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{0, 0, 0, 0, -1, 5, 0, 3, 0, 0, 0, -4},
                 new int[]{-1, 0, 1, 1, 0, -5, 0, -4, 0, 0, 0, 5}
         });
         final var diceResult = DiceRoll.of(4, 1);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
-        assertTrue(board.getPossibleMoves().contains(buildMove(21, 20)));
+        assertTrue(board.getPossibleMoves().contains(ObgMove.of("O", "P", DiceValues.of(1))));
     }
 
     @Test
     void testFinishMove() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                         new int[]{1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -300,14 +291,14 @@ class AdvancedBgBoardTest {
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
-        board.execute(Direction.CLOCKWISE, buildCollect(Direction.CLOCKWISE, 22));
+        board.execute(Direction.CLOCKWISE, "N", "CB");
         assertTrue(board.isGameComplete());
         Assertions.assertSame(Direction.CLOCKWISE, board.getWinningDirection());
     }
 
     @Test
     void testForcedComposite() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 2, 0, -3, 2, -4, 0, 0, 0, 0}
         });
@@ -315,12 +306,15 @@ class AdvancedBgBoardTest {
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
-        Assertions.assertEquals(Set.of(buildMove(0, 3), buildMove(0, 9)), board.getPossibleMoves());
+        Assertions.assertEquals(
+                Set.of(ObgMove.of("A", "D", DiceValues.of(3)),
+                        ObgMove.of("A", "J", DiceValues.of(3, 6))),
+                board.getPossibleMoves());
     }
 
     @Test
     void testForcedComposite2Columns() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 0, 0, -3, 3, -4, 0, 0, 0, 0}
         });
@@ -328,12 +322,17 @@ class AdvancedBgBoardTest {
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
-        Assertions.assertEquals(Set.of(buildMove(0, 3), buildMove(0, 9), buildMove(11, 14), buildMove(11, 20)), board.getPossibleMoves());
+        Assertions.assertEquals(
+                Set.of(ObgMove.of("A", "D", DiceValues.of(3)),
+                        ObgMove.of("A", "J", DiceValues.of(3, 6)),
+                        ObgMove.of("L", "V", DiceValues.of(3)),
+                        ObgMove.of("L", "P", DiceValues.of(3, 6))),
+                board.getPossibleMoves());
     }
 
     @Test
     void testUnforcedToHomeArea() {
-        final var board = BoardFactory.build(new int[][]{
+        final var board = BoardEngineFactory.build(new int[][]{
                 new int[]{2, 2, 1, 2, 4, 3, 0, 1, 0, 0, 0, 0},
                 new int[]{-2, -2, -1, -2, -3, -4, 0, 0, 0, -1, 0, 0}
         });
@@ -341,26 +340,9 @@ class AdvancedBgBoardTest {
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
 
-        assertTrue(board.getPossibleMoves().containsAll(Set.of(buildMove(7, 3), buildMove(7, 1))));
-    }
-
-    private BgMove buildMove(int from, int to) {
-        return BgMove.of(IDS_BY_POSITION.get(from), IDS_BY_POSITION.get(to));
-    }
-
-    private BgMove buildEnter(Direction direction, int to) {
-        return BgMove.of("S" + getSymbolForDirection(direction), IDS_BY_POSITION.get(to));
-    }
-
-    private BgMove buildCollect(Direction direction, int from) {
-        return BgMove.of(IDS_BY_POSITION.get(from), "C" + getSymbolForDirection(direction));
-    }
-
-    private String getSymbolForDirection(Direction direction) {
-        if (direction == Direction.NONE) {
-            return " ";
-        }
-        return direction == Direction.CLOCKWISE ? "B" : "W";
+        assertTrue(board.getPossibleMoves().containsAll(Set.of(
+                ObgMove.of("H", "D", DiceValues.of(4)),
+                ObgMove.of("H", "B", DiceValues.of(6)))));
     }
 
 }

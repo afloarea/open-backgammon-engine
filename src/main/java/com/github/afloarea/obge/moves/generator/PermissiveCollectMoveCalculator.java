@@ -1,8 +1,8 @@
 package com.github.afloarea.obge.moves.generator;
 
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.ObgMove;
 import com.github.afloarea.obge.common.Constants;
-import com.github.afloarea.obge.common.Move;
 import com.github.afloarea.obge.layout.ColumnSequence;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public final class PermissiveCollectMoveCalculator extends AbstractMoveCalculato
     }
 
     @Override
-    public final Stream<Move> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction) {
+    public final Stream<ObgMove> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction) {
         checkedOnce = false;
         return super.computeMovesFromStart(startIndex, availableHops, direction);
     }

@@ -45,6 +45,16 @@ public interface ColumnSequence {
     int getColumnIndex(BoardColumn column, Direction direction);
 
     /**
+     * Retrieve the index of a column based on its id and the direction.
+     * @param columnId the id of the column
+     * @param direction the direction in which to search
+     * @return the index of the column
+     */
+    default int getColumnIndex(String columnId, Direction direction) {
+        return getColumnIndex(getColumnById(columnId), direction);
+    }
+
+    /**
      * Retrieve a column based on it's id.
      * @param columnId the column id
      * @return the column with the columnId

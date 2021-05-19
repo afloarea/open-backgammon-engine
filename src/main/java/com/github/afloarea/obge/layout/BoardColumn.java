@@ -1,7 +1,7 @@
 package com.github.afloarea.obge.layout;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.exceptions.IllegalBgActionException;
+import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 
 import java.util.Objects;
 
@@ -40,14 +40,14 @@ public final class BoardColumn {
             return;
         }
         if (this.elementsDirection != elementDirection || elementDirection == Direction.NONE) {
-            throw new IllegalBgActionException("Cannot add element of direction " + elementDirection);
+            throw new IllegalObgActionException("Cannot add element of direction " + elementDirection);
         }
         pieceCount++;
     }
 
     public void removeElement() {
         if (pieceCount == 0) {
-            throw new IllegalBgActionException("Cannot remove non-existing pieces from column " + id);
+            throw new IllegalObgActionException("Cannot remove non-existing pieces from column " + id);
         }
         if (--pieceCount == 0) {
             elementsDirection = Direction.NONE;

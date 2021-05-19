@@ -1,8 +1,9 @@
 package com.github.afloarea.obge.moves.generator;
 
+import com.github.afloarea.obge.DiceValues;
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.ObgMove;
 import com.github.afloarea.obge.common.Constants;
-import com.github.afloarea.obge.common.Move;
 import com.github.afloarea.obge.layout.ColumnSequence;
 
 import java.util.ArrayList;
@@ -21,12 +22,12 @@ public abstract class AbstractMoveCalculator implements MoveCalculator {
     }
 
     @Override
-    public Stream<Move> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction) {
+    public Stream<ObgMove> computeMovesFromStart(int startIndex, List<Integer> availableHops, Direction direction) {
         if (availableHops.isEmpty()) {
             return Stream.empty();
         }
         final var usedHops = new ArrayList<Integer>();
-        final var moves = new ArrayList<Move>();
+        final var moves = new ArrayList<ObgMove>();
 
         int index = startIndex;
         for (int hop : availableHops) {
@@ -36,10 +37,10 @@ public abstract class AbstractMoveCalculator implements MoveCalculator {
             }
 
             usedHops.add(hop);
-            moves.add(new Move(
-                    columnSequence.getColumn(startIndex, direction),
-                    columnSequence.getColumn(Math.min(Constants.COLLECT_INDEX, newIndex), direction),
-                    new ArrayList<>(usedHops)));
+            moves.add(ObgMove.of(
+                    columnSequence.getColumn(startIndex, direction).getId(),
+                    columnSequence.getColumn(Math.min(Constants.COLLECT_INDEX, newIndex), direction).getId(),
+                    DiceValues.of(usedHops)));
             index = newIndex;
         }
 
