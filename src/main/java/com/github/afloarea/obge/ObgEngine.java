@@ -1,6 +1,7 @@
 package com.github.afloarea.obge;
 
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
+import com.github.afloarea.obge.impl.BasicObgEngine;
 import com.github.afloarea.obge.impl.BoardEngineFactory;
 
 import java.util.List;
@@ -34,8 +35,7 @@ public interface ObgEngine {
 
     /**
      * Execute the move from source to target in the given direction.
-     * If there are multiple moves from the source to the target, then the one with the highest starting dice value
-     * will be selected.
+     * If there are multiple moves from the source to the target, then the DiceRoll order is used.
      *
      * @param direction the direction in which to execute move
      * @param source    the source of the move to execute
@@ -134,6 +134,6 @@ public interface ObgEngine {
      * @return a new arranged board
      */
     static ObgEngine create(String[][] template) {
-        return BoardEngineFactory.buildDefaultWithTemplate(template);
+        return new BasicObgEngine(BoardEngineFactory.buildDefaultColumnSequenceWithTemplate(template));
     }
 }

@@ -21,9 +21,9 @@ public final class BoardEngineFactory {
     private BoardEngineFactory() {
     }
 
-    public static BasicObgEngine buildDefaultWithTemplate(String[][] template) {
+    public static ColumnSequence buildDefaultColumnSequenceWithTemplate(String[][] template) {
         checkTemplate(template);
-        return build(template, new int[][]{
+        return buildColumnSequence(template, new int[][]{
                         {-2, 0, 0, 0, 0, +5, 0, +3, 0, 0, 0, -5},
                         {+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, +5}
                 },
@@ -51,16 +51,22 @@ public final class BoardEngineFactory {
     public static BasicObgEngine build(String[][] template,
                                        int[][] values,
                                        int suspendedForward, int suspendedBackwards, int collectedForward, int collectedBackwards) {
+        final var columnSequence = buildColumnSequence(
+                template, values, suspendedForward, suspendedBackwards, collectedForward, collectedBackwards);
 
+        return new BasicObgEngine(columnSequence);
+    }
+
+    public static ColumnSequence buildColumnSequence(String[][] template,
+                                                     int[][] values,
+                                                     int suspendedForward, int suspendedBackwards, int collectedForward, int collectedBackwards) {
         final var suspendedForwardColumn = new BoardColumn(suspendedForward, Direction.CLOCKWISE, template[2][0]);
         final var suspendedBackwardsColumn = new BoardColumn(suspendedBackwards, Direction.ANTICLOCKWISE, template[2][1]);
         final var collectedForwardColumn = new BoardColumn(collectedForward, Direction.CLOCKWISE, template[2][2]);
         final var collectedBackwardsColumn = new BoardColumn(collectedBackwards, Direction.ANTICLOCKWISE, template[2][3]);
 
-        final ColumnSequence columnSequence = new ColumnArrangement(translateToColumns(template, values),
+        return new ColumnArrangement(translateToColumns(template, values),
                 suspendedForwardColumn, suspendedBackwardsColumn, collectedForwardColumn, collectedBackwardsColumn);
-
-        return new BasicObgEngine(columnSequence);
     }
 
     public static BasicObgEngine build(int[][] values) {

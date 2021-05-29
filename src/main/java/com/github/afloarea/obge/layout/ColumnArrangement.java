@@ -89,7 +89,7 @@ public final class ColumnArrangement implements ColumnSequence {
             final var columns = columnsByDirection.get(direction);
             IntStream.range(0, columns.length).forEach(index -> columnIdByIndex.put(columns[index].getId(), index));
 
-            columnPositionByIdByDirection.put(direction, columnIdByIndex);
+            columnPositionByIdByDirection.put(direction, Collections.unmodifiableMap(columnIdByIndex));
         });
 
         columnsById = Stream.concat(

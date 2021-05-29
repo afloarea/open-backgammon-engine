@@ -1,11 +1,12 @@
 package com.github.afloarea.obge.layout;
 
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.board.ColumnInfo;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 
 import java.util.Objects;
 
-public final class BoardColumn {
+public final class BoardColumn implements ColumnInfo {
 
     private int pieceCount;
     private Direction elementsDirection;
@@ -17,10 +18,12 @@ public final class BoardColumn {
         this.id = id;
     }
 
+    @Override
     public int getPieceCount() {
         return pieceCount;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -29,6 +32,7 @@ public final class BoardColumn {
         return this.pieceCount == 0;
     }
 
+    @Override
     public Direction getMovingDirectionOfElements() {
         return elementsDirection;
     }
