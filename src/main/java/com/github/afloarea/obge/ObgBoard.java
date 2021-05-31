@@ -1,7 +1,4 @@
-package com.github.afloarea.obge.board;
-
-import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ObgTransition;
+package com.github.afloarea.obge;
 
 import java.util.List;
 

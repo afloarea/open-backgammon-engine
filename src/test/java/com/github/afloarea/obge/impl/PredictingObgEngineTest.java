@@ -1,7 +1,11 @@
 package com.github.afloarea.obge.impl;
 
-import com.github.afloarea.obge.*;
-import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.DiceRoll;
+import com.github.afloarea.obge.DiceValues;
+import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.ObgMove;
+import com.github.afloarea.obge.factory.BoardTemplate;
+import com.github.afloarea.obge.factory.ColumnsFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +19,7 @@ class PredictingObgEngineTest {
 
     @Test
     void boardHandlesSimpleRoll() {
-        final var board = create(BoardEngineFactory.buildDefaultColumnSequenceWithTemplate(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE));
+        final var board = create();
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -27,7 +31,7 @@ class PredictingObgEngineTest {
 
     @Test
     void boardHandlesDouble() {
-        final var board = create(BoardEngineFactory.buildDefaultColumnSequenceWithTemplate(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE));
+        final var board = create();
         final var diceResult = DiceRoll.of(2, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -41,11 +45,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testCanEnter() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         }, 1, 0, 0, 0);
-        final var board = create(columns);
         final var diceResult = DiceRoll.of(1, 6);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -55,13 +58,12 @@ class PredictingObgEngineTest {
 
     @Test
     void unableToEnter() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
                 1, 0, 0, 0
         );
-        final var board = create(columns);
         final var diceResult = DiceRoll.of(6, 6);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -70,12 +72,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testSuspend() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
-                        new int[]{-2, 0, 0, 0, 1, 4, 0, 3, 0, 0, 1, -5},
-                        new int[]{+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, 4}
-                }, 0, 0, 0, 0
-        );
-        final var board = create(columns);
+        final var board = create(new int[][]{
+                new int[]{-2, 0, 0, 0, 1, 4, 0, 3, 0, 0, 1, -5},
+                new int[]{+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, 4}
+        });
         final var diceResult = DiceRoll.of(4, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -91,13 +91,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testEnterWithSuspend() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{2, 2, 1, 2, 2, 2, 0, 2, 0, 0, 0, 0},
                         new int[]{-3, 2, 0, 0, 0, -5, 0, 0, 0, 0, 0, -5}
                 },
-                2, 0, 0, 0
-        );
-        final var board = create(columns);
+                2, 0, 0, 0);
         final var diceResult = DiceRoll.of(4, 3);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -117,13 +115,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testGameWon() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
-                0, 0, 13, 14
-        );
-        final var board = create(columns);
+                0, 0, 13, 14);
         final var diceResult = DiceRoll.of(3, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -136,12 +132,10 @@ class PredictingObgEngineTest {
 
     @Test
     void collectWithHigh() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
-                        new int[]{4, 4, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0},
-                        new int[]{-5, -2, -4, -4, 0, 0, 0, 0, 0, 0, 0, 0}
-                }, 0, 0, 0, 0
-        );
-        final var board = create(columns);
+        final var board = create(new int[][]{
+                new int[]{4, 4, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0},
+                new int[]{-5, -2, -4, -4, 0, 0, 0, 0, 0, 0, 0, 0}
+        });
         final var diceResult = DiceRoll.of(6, 5);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -153,13 +147,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testMoveAndCollect() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{2, 2, 0, 1, 1, 7, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -5, -2, -6, 0, -1, 0, 0, 0, 0}
                 },
-                0, 0, 0, 2
-        );
-        final var board = create(columns);
+                0, 0, 0, 2);
         final var diceResult = DiceRoll.of(3, 5);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -172,13 +164,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testForcedMove() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{-1, 2, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0},
                         new int[]{0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
-                0, 0, 13, 5
-        );
-        final var board = create(columns);
+                0, 0, 13, 5);
         final var diceResult = DiceRoll.of(3, 6);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -190,13 +180,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testNonForcedMove() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{2, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, -1},
                         new int[]{-2, -3, -2, -2, -2, -3, 0, 0, 0, 0, 0, 1}
                 },
-                0, 0, 0, 5
-        );
-        final var board = create(columns);
+                0, 0, 0, 5);
         final var diceResult = DiceRoll.of(6, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -207,13 +195,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testNonForcedWithCollect() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-2, -4, 0, 1, -3, -5, -1, 0, 0, 0, 0, 0}
                 },
-                0, 0, 0, 0
-        );
-        final var board = create(columns);
+                0, 0, 0, 0);
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -224,13 +210,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testNonForceWithCollect2() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
-                        new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
-                        new int[]{-2, -9, 0, 1, -3, 0, 0, -1, 0, 0, 0, 0}
-                },
-                0, 0, 0, 0
-        );
-        final var board = create(columns);
+        final var board = create(new int[][]{
+                new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
+                new int[]{-2, -9, 0, 1, -3, 0, 0, -1, 0, 0, 0, 0}
+        });
         final var diceResult = DiceRoll.of(6, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -239,11 +222,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testCompositeMove() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{2, 0, 0, 0, 0, 5, 0, 2, -1, 0, -1, -5},
                 new int[]{0, 0, 0, 0, -2, -4, 2, -2, 0, 0, 0, 4},
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(6, 5);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
@@ -253,11 +235,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testCompositeNoCollect() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{0, 0, 3, 3, 2, 4, 3, 0, 0, 0, 0, 0},
                 new int[]{0, -5, -2, -1, -3, -3, 0, -1, 0, 0, 0, 0}
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(3, 3);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -269,13 +250,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testExecuteCollectWithHigh() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{0, 1, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -1, -2, -8, 0, 0, 0, 0, 0, 0}
                 },
-                0, 0, 3, 6
-        );
-        final var board = create(columns);
+                0, 0, 3, 6);
         final var diceResult = DiceRoll.of(6, 2);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
@@ -287,11 +266,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testBasicMove() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{0, 0, 0, 0, -1, 5, 0, 3, 0, 0, 0, -4},
                 new int[]{-1, 0, 1, 1, 0, -5, 0, -4, 0, 0, 0, 5}
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(4, 1);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
@@ -300,12 +278,11 @@ class PredictingObgEngineTest {
 
     @Test
     void testFinishMove() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                         new int[]{1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
                 0, 0, 14, 9);
-        final var board = create(columns);
         final var diceResult = DiceRoll.of(4, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -317,11 +294,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testForcedComposite() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 2, 0, -3, 2, -4, 0, 0, 0, 0}
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(6, 3);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -334,11 +310,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testForcedComposite2Columns() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 0, 0, -3, 3, -4, 0, 0, 0, 0}
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(6, 3);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -353,11 +328,10 @@ class PredictingObgEngineTest {
 
     @Test
     void testUnforcedToHomeArea() {
-        final var columns = BoardEngineFactory.buildColumnSequence(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE, new int[][]{
+        final var board = create(new int[][]{
                 new int[]{2, 2, 1, 2, 4, 3, 0, 1, 0, 0, 0, 0},
                 new int[]{-2, -2, -1, -2, -3, -4, 0, 0, 0, -1, 0, 0}
-        }, 0, 0, 0, 0);
-        final var board = create(columns);
+        });
         final var diceResult = DiceRoll.of(6, 4);
 
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
@@ -367,8 +341,16 @@ class PredictingObgEngineTest {
                 ObgMove.of("H", "B", DiceValues.of(6)))));
     }
 
-    private PredictingObgEngine create(ColumnSequence columns) {
-        return new PredictingObgEngine(columns);
+    private PredictingObgEngine create(int[][] layout) {
+        return new PredictingObgEngine(ColumnsFactory.buildColumnSequence(layout));
+    }
+
+    private PredictingObgEngine create(int[][] layout, int suspendedForward, int suspendedBackwards, int collectedForward, int collectedBackwards) {
+        return new PredictingObgEngine(ColumnsFactory.buildColumnSequence(BoardTemplate.getDefault(), layout, suspendedForward, suspendedBackwards, collectedForward, collectedBackwards));
+    }
+
+    private PredictingObgEngine create() {
+        return new PredictingObgEngine(ColumnsFactory.buildStartingSequence());
     }
 
 }

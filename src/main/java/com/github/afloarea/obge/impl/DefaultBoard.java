@@ -1,7 +1,9 @@
-package com.github.afloarea.obge.board;
+package com.github.afloarea.obge.impl;
 
 import com.github.afloarea.obge.Direction;
 import com.github.afloarea.obge.ObgTransition;
+import com.github.afloarea.obge.ColumnInfo;
+import com.github.afloarea.obge.ObgBoard;
 import com.github.afloarea.obge.layout.ColumnSequence;
 
 import java.util.ArrayDeque;

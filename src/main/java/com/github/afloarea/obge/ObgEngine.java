@@ -1,6 +1,8 @@
 package com.github.afloarea.obge;
 
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
+import com.github.afloarea.obge.factory.BoardTemplate;
+import com.github.afloarea.obge.factory.ColumnsFactory;
 import com.github.afloarea.obge.impl.BasicObgEngine;
 import com.github.afloarea.obge.impl.BoardEngineFactory;
 
@@ -115,7 +117,7 @@ public interface ObgEngine {
      * @return a new arranged board
      */
     static ObgEngine create() {
-        return create(BoardEngineFactory.DEFAULT_BOARD_TEMPLATE);
+        return new BasicObgEngine(ColumnsFactory.buildStartingSequence());
     }
 
     /**
@@ -133,7 +135,7 @@ public interface ObgEngine {
      *
      * @return a new arranged board
      */
-    static ObgEngine create(String[][] template) {
-        return new BasicObgEngine(BoardEngineFactory.buildDefaultColumnSequenceWithTemplate(template));
+    static ObgEngine create(BoardTemplate template) { //TODO: fix exports
+        return new BasicObgEngine(ColumnsFactory.buildStartingSequence(template));
     }
 }
