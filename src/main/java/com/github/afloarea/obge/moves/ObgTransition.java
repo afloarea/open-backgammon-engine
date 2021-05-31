@@ -1,4 +1,4 @@
-package com.github.afloarea.obge;
+package com.github.afloarea.obge.moves;
 
 import java.util.Objects;
 import java.util.StringJoiner;

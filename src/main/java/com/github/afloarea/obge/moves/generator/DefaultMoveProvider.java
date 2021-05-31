@@ -1,8 +1,8 @@
 package com.github.afloarea.obge.moves.generator;
 
-import com.github.afloarea.obge.DiceValues;
+import com.github.afloarea.obge.dice.DiceValues;
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ObgMove;
+import com.github.afloarea.obge.moves.ObgMove;
 import com.github.afloarea.obge.layout.BoardColumn;
 import com.github.afloarea.obge.layout.ColumnSequence;
 

@@ -1,7 +1,7 @@
 package com.github.afloarea.obge.moves.generator;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ObgMove;
+import com.github.afloarea.obge.moves.ObgMove;
 
 import java.util.List;
 import java.util.stream.Stream;

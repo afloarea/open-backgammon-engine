@@ -20,10 +20,37 @@ public final class BoardTemplate {
         collectColumnsIds = new EnumMap<>(builder.collectColumnsIds);
     }
 
+    /**
+     * Build a new board template.
+     *
+     * @return a new builder
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+
+    /**
+     * Get the default board template.
+     * <ul>
+     *     <li>
+     *         <pre>["A" "B" "C" "D" "E" "F"    "G" "H" "I" "J" "K" "L"] for the top.</pre>
+     *         The first six are the home area for the anticlockwise playing player
+     *     </li>
+     *     <li>
+     *         <pre>["M" "N" "O" "P" "Q" "R"    "T" "U" "V" "W" "X" "Y"] for the bottom.</pre>
+     *         The first six are the home area for the clockwise playing player
+     *     </li>
+     *     <li>
+     *         "SB" and "SW" for the suspended pieces column for clockwise and anticlockwise respectively.
+     *     </li>
+     *     <li>
+     *         "CB" and "CW" for the collected pieces column for clockwise and anticlockwise respectively.
+     *     </li>
+     * </ul>
+     *
+     * @return the default template
+     */
     public static BoardTemplate getDefault() {
         return Holder.DEFAULT;
     }

@@ -1,7 +1,7 @@
 package com.github.afloarea.obge.layout;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ColumnInfo;
+import com.github.afloarea.obge.board.ColumnInfo;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 
 import java.util.Objects;

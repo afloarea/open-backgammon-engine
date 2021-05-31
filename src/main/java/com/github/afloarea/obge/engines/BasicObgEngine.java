@@ -1,11 +1,10 @@
-package com.github.afloarea.obge.impl;
+package com.github.afloarea.obge.engines;
 
-import com.github.afloarea.obge.DiceRoll;
-import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ObgEngine;
-import com.github.afloarea.obge.ObgMove;
+import com.github.afloarea.obge.*;
+import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.moves.ObgMove;
 import com.github.afloarea.obge.moves.executor.DefaultMoveExecutor;
 import com.github.afloarea.obge.moves.executor.MoveExecutor;
 import com.github.afloarea.obge.moves.generator.DefaultMoveProvider;
@@ -23,19 +22,17 @@ import static com.github.afloarea.obge.common.Constants.PIECES_PER_PLAYER;
 /**
  * Engine implementation.
  */
-public final class BasicObgEngine implements ObgEngine {
+public final class BasicObgEngine extends BaseObgEngine implements InteractiveObgEngine {
 
     private final Set<ObgMove> possibleMoves = new LinkedHashSet<>();
-    private Direction currentDirection = Direction.NONE;
 
     private final List<Integer> remainingDiceValues = new ArrayList<>();
 
-    private final ColumnSequence columns;
     private final PossibleMovesProvider defaultMoveProvider;
     private final MoveExecutor moveExecutor;
 
     public BasicObgEngine(ColumnSequence columns) {
-        this.columns = columns;
+        super(columns);
         this.defaultMoveProvider = new DefaultMoveProvider(columns);
         this.moveExecutor = new DefaultMoveExecutor(columns);
     }
@@ -48,21 +45,6 @@ public final class BasicObgEngine implements ObgEngine {
         dice.stream().boxed().forEach(remainingDiceValues::add);
 
         updatePossibleMoves();
-    }
-
-    private void validateDirection(Direction direction) {
-        if (isGameComplete()) {
-            throw new IllegalObgActionException("Unable to roll dice. Game is finished");
-        }
-        if (!remainingDiceValues.isEmpty()) {
-            throw new IllegalObgActionException("Cannot update dice. Turn is not yet over");
-        }
-        if (direction == null || direction == Direction.NONE) {
-            throw new IllegalObgActionException("Invalid direction provided");
-        }
-        if (direction != currentDirection.reverse() && currentDirection != Direction.NONE) {
-            throw new IllegalObgActionException("Wrong player color rolled dice.");
-        }
     }
 
     private void updatePossibleMoves() {
@@ -107,16 +89,6 @@ public final class BasicObgEngine implements ObgEngine {
         return executeMove(move);
     }
 
-    private void checkTransitionPossible(Direction direction) {
-        if (isGameComplete()) {
-            throw new IllegalObgActionException("Game is complete. No more moves allowed");
-        }
-
-        if (direction != currentDirection || direction == Direction.NONE) {
-            throw new IllegalObgActionException("Incorrect direction provided");
-        }
-    }
-
     private void checkMoveIsExecutable(Direction direction, ObgMove move) {
         checkTransitionPossible(direction);
 
@@ -137,11 +109,6 @@ public final class BasicObgEngine implements ObgEngine {
         return Stream.of(Direction.CLOCKWISE, Direction.ANTICLOCKWISE)
                 .map(columns::getCollectColumn)
                 .anyMatch(column -> column.getPieceCount() == PIECES_PER_PLAYER);
-    }
-
-    @Override
-    public Direction getCurrentTurnDirection() {
-        return currentDirection;
     }
 
     @Override

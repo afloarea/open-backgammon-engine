@@ -1,4 +1,6 @@
-package com.github.afloarea.obge;
+package com.github.afloarea.obge.moves;
+
+import com.github.afloarea.obge.dice.DiceValues;
 
 import java.util.Objects;
 import java.util.StringJoiner;

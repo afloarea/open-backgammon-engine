@@ -1,4 +1,4 @@
-package com.github.afloarea.obge;
+package com.github.afloarea.obge.board;
 
 import com.github.afloarea.obge.Direction;
 

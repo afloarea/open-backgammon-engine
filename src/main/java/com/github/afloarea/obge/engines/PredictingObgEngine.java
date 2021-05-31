@@ -1,13 +1,17 @@
-package com.github.afloarea.obge.impl;
+package com.github.afloarea.obge.engines;
 
 import com.github.afloarea.obge.*;
-import com.github.afloarea.obge.ObgTransition;
+import com.github.afloarea.obge.dice.DiceRoll;
+import com.github.afloarea.obge.dice.DiceValues;
+import com.github.afloarea.obge.moves.ObgTransition;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.moves.ObgMove;
 import com.github.afloarea.obge.moves.executor.DefaultMoveExecutor;
 import com.github.afloarea.obge.moves.executor.MoveExecutor;
 import com.github.afloarea.obge.moves.predictor.DefaultPredictor;
 import com.github.afloarea.obge.moves.predictor.ObgPredictor;
+import com.github.afloarea.obge.moves.utils.MoveUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,17 +23,15 @@ import java.util.stream.Stream;
 import static com.github.afloarea.obge.common.Constants.PIECES_PER_PLAYER;
 import static java.util.function.Predicate.not;
 
-public final class PredictingObgEngine implements ObgEngine {
+public final class PredictingObgEngine extends BaseObgEngine implements MixedModeObgEngine {
 
-    private Direction currentDirection = Direction.NONE;
-    private final ColumnSequence columns;
     private final ObgPredictor predictor;
     private final MoveExecutor moveExecutor;
 
     private final Set<List<ObgTransition>> possibleTransitions = new HashSet<>();
 
     public PredictingObgEngine(ColumnSequence columns) {
-        this.columns = columns;
+        super(columns);
         this.predictor = new DefaultPredictor();
         this.moveExecutor = new DefaultMoveExecutor(columns);
     }
@@ -40,21 +42,6 @@ public final class PredictingObgEngine implements ObgEngine {
 
         currentDirection = direction;
         possibleTransitions.addAll(predictor.predict(columns, dice, direction));
-    }
-
-    private void validateDirection(Direction direction) {
-        if (isGameComplete()) {
-            throw new IllegalObgActionException("Unable to roll dice. Game is finished");
-        }
-        if (!possibleTransitions.isEmpty()) {
-            throw new IllegalObgActionException("Cannot update dice. Turn is not yet over");
-        }
-        if (direction == null || direction == Direction.NONE) {
-            throw new IllegalObgActionException("Invalid direction provided");
-        }
-        if (direction != currentDirection.reverse() && currentDirection != Direction.NONE) {
-            throw new IllegalObgActionException("Wrong player color rolled dice.");
-        }
     }
 
     @Override
@@ -79,16 +66,6 @@ public final class PredictingObgEngine implements ObgEngine {
                 .orElseThrow(() -> new IllegalObgActionException("Invalid move provided"));
 
         return executeMove(foundMove);
-    }
-
-    private void checkTransitionPossible(Direction direction) {
-        if (isGameComplete()) {
-            throw new IllegalObgActionException("Game is complete. No more moves allowed");
-        }
-
-        if (direction != currentDirection || direction == Direction.NONE) {
-            throw new IllegalObgActionException("Incorrect direction provided");
-        }
     }
 
     private List<ObgMove> executeMove(ObgMove selectedMove) {
@@ -138,11 +115,6 @@ public final class PredictingObgEngine implements ObgEngine {
     }
 
     @Override
-    public Direction getCurrentTurnDirection() {
-        return currentDirection;
-    }
-
-    @Override
     public Direction getWinningDirection() {
         return Stream.of(Direction.CLOCKWISE, Direction.ANTICLOCKWISE)
                 .filter(direction -> columns.getCollectColumn(direction).getPieceCount() == PIECES_PER_PLAYER)
@@ -160,5 +132,21 @@ public final class PredictingObgEngine implements ObgEngine {
     @Override
     public boolean isCurrentTurnDone() {
         return possibleTransitions.isEmpty();
+    }
+
+    @Override
+    public Set<List<ObgTransition>> getPossibleSequences() {
+        return Set.copyOf(possibleTransitions);
+    }
+
+    @Override
+    public List<ObgTransition> selectSequence(List<ObgTransition> transition) {
+        if (!possibleTransitions.contains(transition)) {
+            throw new IllegalObgActionException("Invalid transition provided");
+        }
+
+        transition.forEach(partialTransition -> MoveUtils.doTransition(partialTransition, currentDirection, columns));
+
+        return transition;
     }
 }

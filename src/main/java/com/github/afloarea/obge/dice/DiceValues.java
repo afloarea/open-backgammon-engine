@@ -1,4 +1,4 @@
-package com.github.afloarea.obge;
+package com.github.afloarea.obge.dice;
 
 import java.util.Arrays;
 import java.util.Iterator;

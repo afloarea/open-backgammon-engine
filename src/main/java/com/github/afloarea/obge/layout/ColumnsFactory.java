@@ -1,9 +1,7 @@
-package com.github.afloarea.obge.factory;
+package com.github.afloarea.obge.layout;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.layout.BoardColumn;
-import com.github.afloarea.obge.layout.ColumnArrangement;
-import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.factory.BoardTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;

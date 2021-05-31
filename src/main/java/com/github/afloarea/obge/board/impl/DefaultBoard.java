@@ -1,10 +1,11 @@
-package com.github.afloarea.obge.impl;
+package com.github.afloarea.obge.board.impl;
 
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.ObgTransition;
-import com.github.afloarea.obge.ColumnInfo;
-import com.github.afloarea.obge.ObgBoard;
+import com.github.afloarea.obge.moves.ObgTransition;
+import com.github.afloarea.obge.board.ColumnInfo;
+import com.github.afloarea.obge.board.ObgBoard;
 import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.moves.utils.MoveUtils;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -20,16 +21,7 @@ public final class DefaultBoard implements ObgBoard {
 
     @Override
     public void doSequence(List<ObgTransition> sequence, Direction direction) {
-        sequence.forEach(transition -> {
-            final var source = columns.getColumnById(transition.getSource());
-            final var target = columns.getColumnById(transition.getTarget());
-            if (transition.isSuspending()) {
-                target.removeElement();
-                columns.getSuspendedColumn(direction.reverse()).addElement(direction.reverse());
-            }
-            target.addElement(direction);
-            source.removeElement();
-        });
+        sequence.forEach(transition -> MoveUtils.doTransition(transition, direction, columns));
     }
 
     @Override
