@@ -141,12 +141,14 @@ public final class PredictingObgEngine extends BaseObgEngine implements MixedMod
     }
 
     @Override
-    public List<ObgTransition> selectSequence(List<ObgTransition> transition) {
+    public List<ObgTransition> selectSequence(Direction direction, List<ObgTransition> transition) {
+        checkTransitionPossible(direction);
         if (!possibleTransitions.contains(transition)) {
             throw new IllegalObgActionException("Invalid transition provided");
         }
 
         transition.forEach(partialTransition -> MoveUtils.doTransition(partialTransition, currentDirection, columns));
+        possibleTransitions.clear();
 
         return transition;
     }

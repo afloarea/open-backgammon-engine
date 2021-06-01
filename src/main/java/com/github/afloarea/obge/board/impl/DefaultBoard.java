@@ -20,12 +20,12 @@ public final class DefaultBoard implements ObgBoard {
     }
 
     @Override
-    public void doSequence(List<ObgTransition> sequence, Direction direction) {
+    public void doSequence(Direction direction, List<ObgTransition> sequence) {
         sequence.forEach(transition -> MoveUtils.doTransition(transition, direction, columns));
     }
 
     @Override
-    public void undoSequence(List<ObgTransition> sequence, Direction direction) {
+    public void undoSequence(Direction direction, List<ObgTransition> sequence) {
         final var seq = new ArrayDeque<>(sequence);
         seq.descendingIterator().forEachRemaining(transition -> {
             final var source = columns.getColumnById(transition.getSource());

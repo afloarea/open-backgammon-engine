@@ -9,6 +9,6 @@ public interface TurnBasedObgEngine extends ObgEngine {
 
     Set<List<ObgTransition>> getPossibleSequences();
 
-    List<ObgTransition> selectSequence(List<ObgTransition> transition);
+    List<ObgTransition> selectSequence(Direction direction, List<ObgTransition> transition);
 
 }

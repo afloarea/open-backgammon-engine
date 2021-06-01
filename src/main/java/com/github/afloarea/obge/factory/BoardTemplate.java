@@ -38,7 +38,7 @@ public final class BoardTemplate {
      *         The first six are the home area for the anticlockwise playing player
      *     </li>
      *     <li>
-     *         <pre>["M" "N" "O" "P" "Q" "R"    "T" "U" "V" "W" "X" "Y"] for the bottom.</pre>
+     *         <pre>["M" "N" "O" "P" "Q" "R"    "S" "T" "U" "V" "W" "X"] for the bottom.</pre>
      *         The first six are the home area for the clockwise playing player
      *     </li>
      *     <li>

@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface ObgBoard {
 
-    void doSequence(List<ObgTransition> sequence, Direction direction);
+    void doSequence(Direction direction, List<ObgTransition> sequence);
 
-    void undoSequence(List<ObgTransition> sequence, Direction direction);
+    void undoSequence(Direction direction, List<ObgTransition> sequence);
 
     ColumnInfo getSuspendColumn(Direction direction);
 
