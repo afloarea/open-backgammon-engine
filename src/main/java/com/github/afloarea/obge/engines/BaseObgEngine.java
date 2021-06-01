@@ -42,4 +42,10 @@ public abstract class BaseObgEngine implements ObgEngine {
     public final Direction getCurrentTurnDirection() {
         return currentDirection;
     }
+
+    @Override
+    public void reset() {
+        currentDirection = Direction.NONE;
+        columns.reset();
+    }
 }

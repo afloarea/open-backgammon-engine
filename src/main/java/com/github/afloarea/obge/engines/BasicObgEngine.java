@@ -1,6 +1,7 @@
 package com.github.afloarea.obge.engines;
 
-import com.github.afloarea.obge.*;
+import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.InteractiveObgEngine;
 import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 import com.github.afloarea.obge.layout.ColumnSequence;
@@ -117,5 +118,12 @@ public final class BasicObgEngine extends BaseObgEngine implements InteractiveOb
                 .filter(direction -> columns.getCollectColumn(direction).getPieceCount() == PIECES_PER_PLAYER)
                 .findAny()
                 .orElse(Direction.NONE);
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        remainingDiceValues.clear();
+        possibleMoves.clear();
     }
 }

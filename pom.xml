@@ -6,7 +6,7 @@
 
     <groupId>com.github.afloarea</groupId>
     <artifactId>open-backgammon-engine</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <name>Open Backgammon Engine</name>
 
     <properties>

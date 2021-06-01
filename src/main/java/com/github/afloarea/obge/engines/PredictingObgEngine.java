@@ -1,12 +1,13 @@
 package com.github.afloarea.obge.engines;
 
-import com.github.afloarea.obge.*;
+import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.MixedModeObgEngine;
 import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.dice.DiceValues;
-import com.github.afloarea.obge.moves.ObgTransition;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 import com.github.afloarea.obge.layout.ColumnSequence;
 import com.github.afloarea.obge.moves.ObgMove;
+import com.github.afloarea.obge.moves.ObgTransition;
 import com.github.afloarea.obge.moves.executor.DefaultMoveExecutor;
 import com.github.afloarea.obge.moves.executor.MoveExecutor;
 import com.github.afloarea.obge.moves.predictor.DefaultPredictor;
@@ -148,5 +149,11 @@ public final class PredictingObgEngine extends BaseObgEngine implements MixedMod
         transition.forEach(partialTransition -> MoveUtils.doTransition(partialTransition, currentDirection, columns));
 
         return transition;
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        possibleTransitions.clear();
     }
 }

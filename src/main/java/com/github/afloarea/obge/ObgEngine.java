@@ -54,4 +54,9 @@ public interface ObgEngine {
      * @return true if the current direction has no moves left to make.
      */
     boolean isCurrentTurnDone();
+
+    /**
+     * Reset the engine to the starting state.
+     */
+    void reset();
 }

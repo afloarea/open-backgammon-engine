@@ -5,6 +5,7 @@ import com.github.afloarea.obge.board.ColumnInfo;
 import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public final class BoardColumn implements ColumnInfo {
 
@@ -62,6 +63,16 @@ public final class BoardColumn implements ColumnInfo {
         return this.pieceCount <= 1 || this.elementsDirection == direction;
     }
 
+    public void clear() {
+        elementsDirection = Direction.NONE;
+        pieceCount = 0;
+    }
+
+    public void set(Direction direction, int pieceCount) {
+        this.elementsDirection = direction;
+        this.pieceCount = pieceCount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -73,5 +84,14 @@ public final class BoardColumn implements ColumnInfo {
     @Override
     public int hashCode() {
         return Objects.hash(pieceCount, elementsDirection, id);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", BoardColumn.class.getSimpleName() + "[", "]")
+                .add("pieceCount=" + pieceCount)
+                .add("elementsDirection=" + elementsDirection)
+                .add("id='" + id + "'")
+                .toString();
     }
 }

@@ -1,6 +1,9 @@
 package com.github.afloarea.obge.board;
 
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.board.impl.DefaultBoard;
+import com.github.afloarea.obge.factory.BoardTemplate;
+import com.github.afloarea.obge.layout.ColumnsFactory;
 import com.github.afloarea.obge.moves.ObgTransition;
 
 import java.util.List;
@@ -17,8 +20,10 @@ public interface ObgBoard {
 
     List<ColumnInfo> getNormalColumns(Direction direction);
 
-    static ObgBoard createStartingBoard() {
-        return null;
+    static ObgBoard createStartingBoard(BoardTemplate template) {
+        return new DefaultBoard(ColumnsFactory.buildStartingSequence(template));
     }
+
+    void reset();
 
 }

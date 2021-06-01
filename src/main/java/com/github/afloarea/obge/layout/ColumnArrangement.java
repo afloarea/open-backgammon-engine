@@ -97,4 +97,18 @@ public final class ColumnArrangement implements ColumnSequence {
                 .collect(Collectors.toMap(BoardColumn::getId, Function.identity()));
 
     }
+
+    @Override
+    public void reset() {
+        columnsById.values().forEach(BoardColumn::clear);
+        final var clockwiseColumns = columnsByDirection.get(Direction.CLOCKWISE);
+        clockwiseColumns[1].set(Direction.CLOCKWISE, 2);
+        clockwiseColumns[6].set(Direction.ANTICLOCKWISE, 5);
+        clockwiseColumns[8].set(Direction.ANTICLOCKWISE, 3);
+        clockwiseColumns[12].set(Direction.CLOCKWISE, 5);
+        clockwiseColumns[13].set(Direction.ANTICLOCKWISE, 5);
+        clockwiseColumns[17].set(Direction.CLOCKWISE, 3);
+        clockwiseColumns[19].set(Direction.CLOCKWISE, 5);
+        clockwiseColumns[24].set(Direction.ANTICLOCKWISE, 2);
+    }
 }

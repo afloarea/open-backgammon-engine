@@ -53,4 +53,9 @@ public final class DefaultBoard implements ObgBoard {
     public List<ColumnInfo> getNormalColumns(Direction direction) {
         return columns.stream(direction).skip(1).collect(Collectors.toList());
     }
+
+    @Override
+    public void reset() {
+        columns.reset();
+    }
 }
