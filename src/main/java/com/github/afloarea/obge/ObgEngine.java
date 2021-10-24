@@ -9,7 +9,7 @@ import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 public interface ObgEngine {
 
     /**
-     * Apply a dice roll result.
+     * Apply a die roll result.
      * If this is the first turn, either direction can apply the dice roll.
      *
      * @param direction the direction (should be either clockwise or anticlockwise depending on whose turn is it)
@@ -46,7 +46,9 @@ public interface ObgEngine {
      *
      * @return whether the game is complete or not.
      */
-    boolean isGameComplete();
+    default boolean isGameComplete() {
+        return getWinningDirection() != Direction.NONE;
+    }
 
     /**
      * Check if the current direction has finished the turn.

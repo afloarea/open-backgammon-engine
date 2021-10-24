@@ -1,23 +1,31 @@
-package com.github.afloarea.obge.engines;
+package com.github.afloarea.obge;
 
-import com.github.afloarea.obge.*;
 import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.dice.DiceValues;
-import com.github.afloarea.obge.factory.BoardTemplate;
-import com.github.afloarea.obge.layout.ColumnsFactory;
+import com.github.afloarea.obge.engines.HybridObgEngine;
+import com.github.afloarea.obge.engines.InteractiveTurnSlicingObgEngine;
 import com.github.afloarea.obge.moves.ObgMove;
+import com.github.afloarea.obge.utils.EngineUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class BasicObgEngineTest {
+class InteractiveObgEngineTest {
 
-    @Test
-    void boardHandlesSimpleRoll() {
-        final var board = build();
+    private static Stream<Arguments> interactiveEngines() {
+        return Stream.of(Arguments.of(InteractiveTurnSlicingObgEngine.class), Arguments.of(HybridObgEngine.class));
+    }
+
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void boardHandlesSimpleRoll(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type);
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -27,9 +35,10 @@ class BasicObgEngineTest {
         assertTrue(board.isCurrentTurnDone());
     }
 
-    @Test
-    void boardHandlesDouble() {
-        final var board = build();
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void boardHandlesDouble(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type);
         final var diceResult = DiceRoll.of(2, 2);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
@@ -41,22 +50,24 @@ class BasicObgEngineTest {
         assertTrue(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testCanEnter() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testCanEnter(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         }, 1, 0, 0, 0);
         final var diceResult = DiceRoll.of(1, 6);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        assertTrue(board.getPossibleMoves().stream().anyMatch(move -> "SB".equals(move.getSource()) && "A".equals(move.getTarget())));
+        assertTrue(board.getPossibleMoves().stream().anyMatch(move -> "SB".equals(move.source()) && "A".equals(move.target())));
         board.execute(Direction.CLOCKWISE, "SB", "A");
     }
 
-    @Test
-    void unableToEnter() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void unableToEnter(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         {-2, +2, +2, +2, +2, +2, +5, -13, 0, 0, 0, 0},
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -68,9 +79,10 @@ class BasicObgEngineTest {
         assertTrue(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testSuspend() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testSuspend(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{-2, 0, 0, 0, 1, 4, 0, 3, 0, 0, 1, -5},
                         new int[]{+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, 4}
                 }
@@ -88,9 +100,10 @@ class BasicObgEngineTest {
         assertTrue(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testEnterWithSuspend() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testEnterWithSuspend(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{2, 2, 1, 2, 2, 2, 0, 2, 0, 0, 0, 0},
                         new int[]{-3, 2, 0, 0, 0, -5, 0, 0, 0, 0, 0, -5}
                 },
@@ -101,7 +114,7 @@ class BasicObgEngineTest {
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
         final var enterWith3 = ObgMove.of("SB", "C", DiceValues.of(3));
         Assertions.assertEquals(Set.of(enterWith3), board.getPossibleMoves());
-        board.execute(Direction.CLOCKWISE, enterWith3);
+        board.execute(Direction.CLOCKWISE, enterWith3.source(), enterWith3.target());
         assertTrue(board.isCurrentTurnDone());
 
         final var secondDice = DiceRoll.of(6, 2);
@@ -109,13 +122,14 @@ class BasicObgEngineTest {
         board.applyDiceRoll(Direction.ANTICLOCKWISE, secondDice);
         final var enterWith2 = ObgMove.of("SW", "N", DiceValues.of(2));
         assertTrue(board.getPossibleMoves().contains(enterWith2));
-        board.execute(Direction.ANTICLOCKWISE, enterWith2);
+        board.execute(Direction.ANTICLOCKWISE, enterWith2.source(), enterWith2.target());
         Assertions.assertFalse(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testGameWon() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testGameWon(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -131,9 +145,10 @@ class BasicObgEngineTest {
         Assertions.assertSame(Direction.CLOCKWISE, board.getWinningDirection());
     }
 
-    @Test
-    void collectWithHigh() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void collectWithHigh(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{4, 4, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-5, -2, -4, -4, 0, 0, 0, 0, 0, 0, 0, 0}
                 }
@@ -147,9 +162,10 @@ class BasicObgEngineTest {
                 board.getPossibleMoves());
     }
 
-    @Test
-    void testMoveAndCollect() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testMoveAndCollect(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{2, 2, 0, 1, 1, 7, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -5, -2, -6, 0, -1, 0, 0, 0, 0}
                 },
@@ -165,9 +181,10 @@ class BasicObgEngineTest {
         assertTrue(board.getPossibleMoves().isEmpty());
     }
 
-    @Test
-    void testForcedMove() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testForcedMove(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{-1, 2, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0},
                         new int[]{0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -182,9 +199,10 @@ class BasicObgEngineTest {
                 board.getPossibleMoves());
     }
 
-    @Test
-    void testNonForcedMove() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testNonForcedMove(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{2, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, -1},
                         new int[]{-2, -3, -2, -2, -2, -3, 0, 0, 0, 0, 0, 1}
                 },
@@ -198,9 +216,10 @@ class BasicObgEngineTest {
         assertTrue(availableMoves.contains(ObgMove.of("L", "X", DiceValues.of(1))));
     }
 
-    @Test
-    void testNonForcedWithCollect() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testNonForcedWithCollect(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-2, -4, 0, 1, -3, -5, -1, 0, 0, 0, 0, 0}
                 },
@@ -209,14 +228,15 @@ class BasicObgEngineTest {
         final var diceResult = DiceRoll.of(2, 1);
 
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
-        board.execute(Direction.CLOCKWISE, ObgMove.of("S", "R", DiceValues.of(1)));
+        board.execute(Direction.CLOCKWISE, "S", "R");
         final var availableMoves = board.getPossibleMoves();
         assertTrue(availableMoves.contains(ObgMove.of("N", "CB", DiceValues.of(2))));
     }
 
-    @Test
-    void testNonForceWithCollect2() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testNonForceWithCollect2(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{6, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{-2, -9, 0, 1, -3, 0, 0, -1, 0, 0, 0, 0}
                 },
@@ -228,9 +248,10 @@ class BasicObgEngineTest {
         assertTrue(board.getPossibleMoves().contains(ObgMove.of("T", "R", DiceValues.of(2))));
     }
 
-    @Test
-    void testCompositeMove() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testCompositeMove(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{2, 0, 0, 0, 0, 5, 0, 2, -1, 0, -1, -5},
                 new int[]{0, 0, 0, 0, -2, -4, 2, -2, 0, 0, 0, 4}
         });
@@ -241,9 +262,10 @@ class BasicObgEngineTest {
         assertTrue(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testCompositeNoCollect() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testCompositeNoCollect(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{0, 0, 3, 3, 2, 4, 3, 0, 0, 0, 0, 0},
                 new int[]{0, -5, -2, -1, -3, -3, 0, -1, 0, 0, 0, 0}
         });
@@ -252,13 +274,14 @@ class BasicObgEngineTest {
         board.applyDiceRoll(Direction.CLOCKWISE, diceResult);
 
         assertTrue(
-                board.getPossibleMoves().stream().noneMatch(move -> move.getTarget().equals("CB")));
+                board.getPossibleMoves().stream().noneMatch(move -> move.target().equals("CB")));
 
     }
 
-    @Test
-    void testExecuteCollectWithHigh() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testExecuteCollectWithHigh(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{0, 1, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0},
                         new int[]{0, 0, -1, -1, -2, -8, 0, 0, 0, 0, 0, 0}
                 },
@@ -269,13 +292,14 @@ class BasicObgEngineTest {
         board.applyDiceRoll(Direction.ANTICLOCKWISE, diceResult);
         final var move = ObgMove.of("E", "CW", DiceValues.of(6));
         assertTrue(board.getPossibleMoves().contains(move));
-        board.execute(Direction.ANTICLOCKWISE, move);
+        board.execute(Direction.ANTICLOCKWISE, move.source(), move.target());
         Assertions.assertFalse(board.isCurrentTurnDone());
     }
 
-    @Test
-    void testBasicMove() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testBasicMove(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{0, 0, 0, 0, -1, 5, 0, 3, 0, 0, 0, -4},
                 new int[]{-1, 0, 1, 1, 0, -5, 0, -4, 0, 0, 0, 5}
         });
@@ -285,9 +309,10 @@ class BasicObgEngineTest {
         assertTrue(board.getPossibleMoves().contains(ObgMove.of("O", "P", DiceValues.of(1))));
     }
 
-    @Test
-    void testFinishMove() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testFinishMove(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                         new int[]{1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0},
                         new int[]{0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
                 },
@@ -301,9 +326,10 @@ class BasicObgEngineTest {
         Assertions.assertSame(Direction.CLOCKWISE, board.getWinningDirection());
     }
 
-    @Test
-    void testForcedComposite() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testForcedComposite(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 2, 0, -3, 2, -4, 0, 0, 0, 0}
         });
@@ -317,9 +343,10 @@ class BasicObgEngineTest {
                 board.getPossibleMoves());
     }
 
-    @Test
-    void testForcedComposite2Columns() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testForcedComposite2Columns(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{-3, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, -4},
                 new int[]{-1, 2, 1, 0, 0, -3, 3, -4, 0, 0, 0, 0}
         });
@@ -335,9 +362,10 @@ class BasicObgEngineTest {
                 board.getPossibleMoves());
     }
 
-    @Test
-    void testUnforcedToHomeArea() {
-        final var board = build(new int[][]{
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testUnforcedToHomeArea(Class<? extends InteractiveObgEngine> type) {
+        final var board = EngineUtils.buildDefault(type, new int[][]{
                 new int[]{2, 2, 1, 2, 4, 3, 0, 1, 0, 0, 0, 0},
                 new int[]{-2, -2, -1, -2, -3, -4, 0, 0, 0, -1, 0, 0}
         });
@@ -348,18 +376,6 @@ class BasicObgEngineTest {
         assertTrue(board.getPossibleMoves().containsAll(Set.of(
                 ObgMove.of("H", "D", DiceValues.of(4)),
                 ObgMove.of("H", "B", DiceValues.of(6)))));
-    }
-
-    private static BasicObgEngine build() {
-        return new BasicObgEngine(ColumnsFactory.buildStartingSequence());
-    }
-
-    private static BasicObgEngine build(int[][] layout) {
-        return new BasicObgEngine(ColumnsFactory.buildColumnSequence(layout));
-    }
-
-    private static BasicObgEngine build(int[][] layout, int forwardSuspended, int backwardsSuspended, int forwardCollect, int backwardsCOllect) {
-        return new BasicObgEngine(ColumnsFactory.buildColumnSequence(BoardTemplate.getDefault(), layout, forwardSuspended, backwardsSuspended, forwardCollect, backwardsCOllect));
     }
 
 }

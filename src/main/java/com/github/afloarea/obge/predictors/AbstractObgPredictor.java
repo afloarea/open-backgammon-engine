@@ -1,47 +1,51 @@
-package com.github.afloarea.obge.moves.predictor;
+package com.github.afloarea.obge.predictors;
 
-import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.Direction;
-import com.github.afloarea.obge.moves.ObgTransition;
 import com.github.afloarea.obge.common.Constants;
+import com.github.afloarea.obge.dice.DiceRoll;
 import com.github.afloarea.obge.layout.BoardColumn;
 import com.github.afloarea.obge.layout.ColumnSequence;
+import com.github.afloarea.obge.moves.ObgTransition;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 
-public final class DefaultPredictor implements ObgPredictor {
+public abstract class AbstractObgPredictor<R, A> implements ObgPredictor<R> {
 
     private Direction currentDirection = Direction.NONE;
-    private ColumnSequence columns;
+    protected ColumnSequence columns;
 
-    private final Set<List<ObgTransition>> sequences = new HashSet<>();
+    protected final A aggregator;
 
     private final Deque<Integer> availableDice = new ArrayDeque<>();
-    private final Deque<ObgTransition> performedMoves = new ArrayDeque<>();
+    protected final Deque<ObgTransition> performedMoves = new ArrayDeque<>();
+
+    protected AbstractObgPredictor(A aggregator) {
+        this.aggregator = aggregator;
+    }
 
     @Override
-    public Set<List<ObgTransition>> predict(ColumnSequence columns, DiceRoll diceRoll, Direction direction) {
-        this.currentDirection = direction;
+    public R predict(ColumnSequence columns, DiceRoll diceRoll, Direction direction) {
         this.columns = columns;
-        sequences.clear();
+        this.currentDirection = direction;
+        clearAggregator();
 
         if (diceRoll.isSimple()) {
-            predict(List.of(diceRoll.getDice1(), diceRoll.getDice2()));
-            predict(List.of(diceRoll.getDice2(), diceRoll.getDice1()));
+            predict(List.of(diceRoll.dice1(), diceRoll.dice2()));
+            predict(List.of(diceRoll.dice2(), diceRoll.dice1()));
         } else {
-            predict(diceRoll.stream().boxed().collect(Collectors.toList()));
+            predict(diceRoll.stream().boxed().toList());
         }
 
-        final var maxMoves = sequences.stream()
-                .mapToInt(List::size)
-                .max()
-                .orElse(0);
-
-        sequences.removeIf(sequence -> sequence.size() < maxMoves);
-
-        return Set.copyOf(sequences);
+        return mapAggregatorToResult();
     }
+
+    protected abstract void clearAggregator();
+
+    protected abstract R mapAggregatorToResult();
+
+    protected abstract void save();
 
     private void predict(List<Integer> availableDiceValues) {
         performedMoves.clear();
@@ -56,7 +60,7 @@ public final class DefaultPredictor implements ObgPredictor {
             return;
         }
 
-        final var dieValue = availableDice.element();
+        final var dieValue = availableDice.getFirst();
         // handle suspend column
         final var suspendColumn = columns.getSuspendedColumn(currentDirection);
         if (!suspendColumn.isEmpty()) {
@@ -72,7 +76,7 @@ public final class DefaultPredictor implements ObgPredictor {
 
         // handle normal columns
         boolean moved = false;
-        final var normalColumns = columns.stream(currentDirection).skip(1).collect(Collectors.toList());
+        final var normalColumns = columns.stream(currentDirection).skip(1).toList();
         for (var column : normalColumns) {
             if (canMove(column, dieValue)) {
                 final var executedMove = doMove(column, dieValue);
@@ -93,14 +97,15 @@ public final class DefaultPredictor implements ObgPredictor {
             return false;
         }
 
+        final var targetIndex = sourceIndex + distance;
+
         if (sourceIndex < Constants.HOME_START) {
-            final var target = columns.getColumn(sourceIndex + distance, currentDirection);
+            final var target = columns.getColumn(targetIndex, currentDirection);
             return target.isClearForDirection(currentDirection);
         }
 
         var nonHomePieces = columns.countPiecesUpToIndex(Constants.HOME_START, currentDirection);
         if (nonHomePieces > 0) {
-            var targetIndex = sourceIndex + distance;
             if (targetIndex >= Constants.COLLECT_INDEX) {
                 return false;
             }
@@ -108,7 +113,6 @@ public final class DefaultPredictor implements ObgPredictor {
         }
 
         var piecesBehind = columns.countPiecesUpToIndex(sourceIndex, currentDirection);
-        var targetIndex = sourceIndex + distance;
         if (piecesBehind == 0) {
             return targetIndex >= Constants.COLLECT_INDEX
                     || columns.getColumn(targetIndex, currentDirection).isClearForDirection(currentDirection);
@@ -129,11 +133,12 @@ public final class DefaultPredictor implements ObgPredictor {
         final var target = columns.getColumn(targetIndex, currentDirection);
 
         final var opponentDirection = currentDirection.reverse();
-        var suspended = false;
+        String suspended = null;
         if (target.getMovingDirectionOfElements() == opponentDirection) {
-            columns.getSuspendedColumn(opponentDirection).addElement(opponentDirection);
+            final var suspendedColumn = columns.getSuspendedColumn(opponentDirection);
+            suspendedColumn.addElement(opponentDirection);
             target.removeElement();
-            suspended = true;
+            suspended = suspendedColumn.getId();
         }
         target.addElement(currentDirection);
         source.removeElement();
@@ -144,10 +149,10 @@ public final class DefaultPredictor implements ObgPredictor {
     }
 
     private void undoMove(ObgTransition move) {
-        availableDice.addFirst(move.getUsedDie());
+        availableDice.addFirst(move.usedDie());
 
-        final var originalSource = columns.getColumnById(move.getSource());
-        final var originalTarget = columns.getColumnById(move.getTarget());
+        final var originalSource = columns.getColumnById(move.source());
+        final var originalTarget = columns.getColumnById(move.target());
 
         originalTarget.removeElement();
         originalSource.addElement(currentDirection);
@@ -159,13 +164,6 @@ public final class DefaultPredictor implements ObgPredictor {
         }
 
         performedMoves.removeLast();
-    }
-
-    private void save() {
-        if (performedMoves.isEmpty()) {
-            return;
-        }
-        sequences.add(List.copyOf(performedMoves));
     }
 
 }

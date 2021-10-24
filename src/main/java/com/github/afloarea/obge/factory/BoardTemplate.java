@@ -129,17 +129,17 @@ public final class BoardTemplate {
         }
 
         private static void checkTemplate(List<String> upper, List<String> lower) {
-            if (upper == null || lower == null
-                    || upper.size() != BOARD_COLUMNS / 2 || lower.size() != BOARD_COLUMNS / 2) {
-                throw new IllegalArgumentException("Template must have " + BOARD_COLUMNS + " unique ids");
-            }
+            if (upper == null) upper = Collections.emptyList();
+            if (lower == null) lower = Collections.emptyList();
+
 
             final var idCount = Stream.concat(upper.stream(), lower.stream())
+                    .map(Objects::requireNonNull)
                     .distinct()
                     .count();
 
             if (idCount != BOARD_COLUMNS) {
-                throw new IllegalArgumentException("Template entries must be unique");
+                throw new IllegalArgumentException("Template must have " + BOARD_COLUMNS + " unique ids");
             }
         }
     }
