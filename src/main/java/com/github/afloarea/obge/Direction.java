@@ -45,7 +45,7 @@ public enum Direction {
         if (sign == 0) {
             return NONE;
         }
-        return sign < 0 ? Direction.CLOCKWISE : Direction.ANTICLOCKWISE;
+        return sign > 0 ? Direction.CLOCKWISE : Direction.ANTICLOCKWISE;
     }
 
     /**

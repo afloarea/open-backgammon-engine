@@ -1,9 +1,12 @@
 package com.github.afloarea.obge.layout;
 
 import com.github.afloarea.obge.Direction;
+import com.github.afloarea.obge.board.BoardSnapshot;
+import com.github.afloarea.obge.board.ColumnSnapshot;
 import com.github.afloarea.obge.factory.BoardTemplate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,8 +19,8 @@ public final class ColumnsFactory {
 
     public static ColumnSequence buildStartingSequence(BoardTemplate template) {
         return buildColumnSequence(template, new int[][]{
-                {-2, 0, 0, 0, 0, +5, 0, +3, 0, 0, 0, -5},
-                {+2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, +5}
+                {2, 0, 0, 0, 0, -5, 0, -3, 0, 0, 0, 5},
+                {-2, 0, 0, 0, 0, 5, 0, 3, 0, 0, 0, -5}
         });
     }
 
@@ -35,7 +38,6 @@ public final class ColumnsFactory {
 
     public static ColumnSequence buildColumnSequence(BoardTemplate template,
                                                      int[][] values,
-
                                                      int suspendedForward, int suspendedBackwards,
                                                      int collectedForward, int collectedBackwards) {
         final var forwardSuspend =
@@ -68,6 +70,29 @@ public final class ColumnsFactory {
                 .mapToObj(index -> new BoardColumn(
                         Math.abs(rawValues[index]), Direction.ofSign(rawValues[index]), template.get(index)))
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static BoardSnapshot buildBoardSnapshot(int[][] composition) {
+        return buildBoardSnapshot(composition, 0, 0, 0, 0);
+    }
+
+    public static BoardSnapshot buildBoardSnapshot(int[][] composition,
+                                                   int suspendedForward, int suspendedBackwards,
+                                                   int collectedForward, int collectedBackwards) {
+
+        final var columns = IntStream.concat(Arrays.stream(composition[0]),
+                        IntStream.iterate(composition[1].length - 1, index -> index >= 0, index -> index - 1)
+                                .map(index -> composition[1][index]))
+                .mapToObj(columnValue -> new ColumnSnapshot(Math.abs(columnValue), Direction.ofSign(columnValue)))
+                .toArray(ColumnSnapshot[]::new);
+
+        return BoardSnapshot.builder()
+                .withClockwiseSuspended(suspendedForward)
+                .withAnticlockwiseSuspended(suspendedBackwards)
+                .withClockwiseCollected(collectedForward)
+                .withAnticlockwiseCollected(collectedBackwards)
+                .withColumns(columns)
+                .build();
     }
 
     private ColumnsFactory() {

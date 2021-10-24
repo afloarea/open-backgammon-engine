@@ -93,10 +93,10 @@ public final class BoardSnapshot {
 
     public static final class Builder {
         private ColumnSnapshot[] columns;
-        private int clockwiseCollected;
-        private int anticlockwiseCollected;
-        private int clockwiseSuspended;
-        private int anticlockwiseSuspended;
+        private int clockwiseCollected = 0;
+        private int anticlockwiseCollected = 0;
+        private int clockwiseSuspended = 0;
+        private int anticlockwiseSuspended = 0;
 
         public Builder withColumns(ColumnSnapshot[] columns) {
             this.columns = columns;
