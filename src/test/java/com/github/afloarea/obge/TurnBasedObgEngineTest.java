@@ -5,7 +5,6 @@ import com.github.afloarea.obge.engines.BoardStatePredictingObgEngine;
 import com.github.afloarea.obge.engines.HybridObgEngine;
 import com.github.afloarea.obge.layout.ColumnsFactory;
 import com.github.afloarea.obge.utils.EngineUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -161,7 +160,7 @@ class TurnBasedObgEngineTest {
         engine.chooseBoard(Direction.CLOCKWISE, firstTurn);
         assertTrue(engine.isCurrentTurnDone());
         assertTrue(engine.isGameComplete());
-        Assertions.assertSame(Direction.CLOCKWISE, engine.getWinningDirection());
+        assertSame(Direction.CLOCKWISE, engine.getWinningDirection());
 
     }
 
@@ -198,7 +197,7 @@ class TurnBasedObgEngineTest {
         final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
                 new int[]{-2, -2, 0, -1, -1, -7,    0, 0, 0, 0, 0, 0},
                 new int[]{ 0,  0, 1,  5,  2,  6,    0, 0, 0, 0, 0, 0}
-        }, 0, 0, 3, 0);
+        });
         engine.chooseBoard(Direction.CLOCKWISE, firstTurn);
 
         assertTrue(engine.isCurrentTurnDone());
@@ -221,4 +220,168 @@ class TurnBasedObgEngineTest {
 
         assertEquals(Set.of(firstTurn), engine.getBoardChoices());
     }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testNonForcedMove(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-2, -4, -3, 0, 0, 0,      0, 0, 0, 0, 0,  1},
+                new int[]{ 2,  3,  2, 2, 2, 3,      0, 0, 0, 0, 0, -1}
+            }, 0, 0, 0, 5
+        );
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(6, 1));
+        assertEquals(7, engine.getBoardChoices().size());
+
+        final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
+                new int[]{-2, -4, -3, 0, 0, 0,      0, 0, 0, 0, 0,  1},
+                new int[]{ 2,  3,  2, 2, 2, 3,      0, 0, 0, 0, 0, -1}
+        }, 0, 0, 0, 5);
+        engine.chooseBoard(Direction.CLOCKWISE, firstTurn);
+
+        assertTrue(engine.isCurrentTurnDone());
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testNonForcedWithCollect(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-6, -2, -2, -2, -2, 0,    0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  4,  0, -1,  3, 5,    1, 0, 0, 0, 0, 0}
+            }
+        );
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(2, 1));
+        final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
+                new int[]{-6, -2, -2, -2, -2, 0,    0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  3,  0, -1,  3, 6,    0, 0, 0, 0, 0, 0}
+        }, 0, 0, 1, 0);
+
+        assertTrue(engine.getBoardChoices().contains(firstTurn));
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testNonForceWithCollect2(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-6, -2, -2, -2, -2, 0,        0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  9,  0, -1,  3, 0,        0, 1, 0, 0, 0, 0}
+            }, 0, 0, 0, 0
+        );
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(6, 2));
+        final var firstPossible = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{-6, -2, -2, -2, -2, 0,        0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  9,  0, -1,  3, 0,        0, 0, 0, 0, 0, 0}
+            }, 0, 0, 1, 0
+        );
+        final var secondPossible = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{-6,  -2, -2, -2, -2, 0,        0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  10,  1, -1,  2, 0,        0, 0, 0, 0, 0, 0}
+            }
+        );
+
+        assertEquals(Set.of(firstPossible, secondPossible), engine.getBoardChoices());
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testCompositeMove(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-2, 0, 0, 0, 0, -5,        0, -2, 1, 0, 1,  5},
+                new int[]{ 0, 0, 0, 0, 2,  4,       -2,  2, 0, 0, 0, -4}
+        });
+
+        engine.applyDiceRoll(Direction.ANTICLOCKWISE, DiceRoll.of(6, 5));
+        final var chosenBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{-2, -1, 0, 0, 0, -5,        0, -2, 1, 0, 1,  5},
+                new int[]{ 0,  0, 0, 0, 2,  4,       -2,  2, 0, 0, 0, -3}
+            }
+        );
+
+        assertTrue(engine.getBoardChoices().contains(chosenBoard));
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testExecuteCollectWithHigh(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{0, -1, -2, -2, -4, 0,     0, 0, 0, 0, 0, 0},
+                new int[]{0,  0,  1,  1,  2, 8,     0, 0, 0, 0, 0, 0}
+            }, 0, 0, 3, 6
+        );
+
+        engine.applyDiceRoll(Direction.ANTICLOCKWISE, DiceRoll.of(6, 2));
+        final var chosenBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{0, 0, -2, -2, -3, 0,     0, 0, 0, 0, 0, 0},
+                new int[]{0, 0,  1,  1,  2, 8,     0, 0, 0, 0, 0, 0}
+            }, 0, 0, 3, 8
+        );
+
+        assertTrue(engine.getBoardChoices().contains(chosenBoard));
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testFinishMove(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-1, -2, 0, 0, -1, -2,         0, 0, 0, 0, 0, 0},
+                new int[]{ 0,  1, 0, 0,  0,  0,         0, 0, 0, 0, 0, 0}
+        }, 0, 0, 14, 9);
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(4, 1));
+        final var finalBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{-1, -2, 0, 0, -1, -2,         0, 0, 0, 0, 0, 0},
+                new int[]{ 0,  0, 0, 0,  0,  0,         0, 0, 0, 0, 0, 0}
+            }, 0, 0, 15, 9
+        );
+
+        assertEquals(Set.of(finalBoard), engine.getBoardChoices());
+        engine.chooseBoard(Direction.CLOCKWISE, finalBoard);
+
+        assertTrue(engine.isGameComplete());
+        assertSame(Direction.CLOCKWISE, engine.getWinningDirection());
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testForcedComposite(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{3,  0,  0,  0, 0, 0,      -8, 0, 0, 0, 0, 4},
+                new int[]{1, -2, -1, -2, 0, 3,      -2, 4, 0, 0, 0, 0}
+        });
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(6, 3));
+        final var chosenBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{2,  0,  0,  0, 0, 0,      -8, 0, 0, 1, 0, 4},
+                new int[]{1, -2, -1, -2, 0, 3,      -2, 4, 0, 0, 0, 0}
+            }
+        );
+
+        assertEquals(Set.of(chosenBoard), engine.getBoardChoices());
+    }
+
+    @ParameterizedTest
+    @MethodSource("turnBased")
+    void testForcedComposite2Columns(Class<? extends TurnBasedObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{3,  0,  0, 0, 0, 0,   -9, 0, 0, 0, 0, 4},
+                new int[]{1, -2, -1, 0, 0, 3,   -3, 4, 0, 0, 0, 0}
+        });
+
+        engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(6, 3));
+        final var firstChoice = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{2,  0,  0, 0, 0, 0,   -9, 0, 0, 1, 0, 4},
+                new int[]{1, -2, -1, 0, 0, 3,   -3, 4, 0, 0, 0, 0}
+            }
+        );
+        final var secondChoice = ColumnsFactory.buildBoardSnapshot(new int[][]{
+                new int[]{3,  0,  0, 0, 0, 0,   -9, 0, 0, 0, 0, 3},
+                new int[]{1, -2, -1, 1, 0, 3,   -3, 4, 0, 0, 0, 0}
+            }
+        );
+
+        assertEquals(Set.of(firstChoice, secondChoice), engine.getBoardChoices());
+    }
+
 }
