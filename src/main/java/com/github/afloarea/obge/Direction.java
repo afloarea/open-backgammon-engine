@@ -1,6 +1,6 @@
 package com.github.afloarea.obge;
 
-import java.util.Random;
+import java.util.random.RandomGenerator;
 
 /**
  * The direction.
@@ -53,10 +53,10 @@ public enum Direction {
      * @return a direction at random but not {@code NONE}.
      */
     public static Direction getRandom() {
-        return Wrapper.RANDOM.nextBoolean() ? Direction.CLOCKWISE : Direction.ANTICLOCKWISE;
+        return Wrapper.RNG.nextBoolean() ? Direction.CLOCKWISE : Direction.ANTICLOCKWISE;
     }
 
     private static final class Wrapper {
-        private static final Random RANDOM = new Random();
+        private static final RandomGenerator RNG = RandomGenerator.of("Random");
     }
 }

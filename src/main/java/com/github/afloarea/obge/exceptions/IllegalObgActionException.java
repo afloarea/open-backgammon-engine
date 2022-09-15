@@ -1,7 +1,7 @@
 package com.github.afloarea.obge.exceptions;
 
 /**
- * Generic interface thrown on an illegal action.
+ * Generic exception thrown on an illegal action.
  */
 public class IllegalObgActionException extends RuntimeException {
 

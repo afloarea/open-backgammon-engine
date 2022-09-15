@@ -10,7 +10,7 @@ import static com.github.afloarea.obge.common.Constants.MIN_DICE;
 
 /**
  * Class used to represent the dice values used by a move.
- * Can have from 0 to 4 values.
+ * Can have from 1 to 4 values.
  */
 public final class DiceValues implements Iterable<Integer> {
     public static final DiceValues NONE = new DiceValues(new int[0]);
@@ -85,8 +85,7 @@ public final class DiceValues implements Iterable<Integer> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DiceValues)) return false;
-        DiceValues integers = (DiceValues) o;
+        if (!(o instanceof DiceValues integers)) return false;
         return Arrays.equals(wrappedValues, integers.wrappedValues);
     }
 

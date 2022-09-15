@@ -11,7 +11,7 @@ import java.util.Set;
 public interface TurnBasedObgEngine extends ObgEngine {
 
     /**
-     * Get the possible board states after rolling dice for the current playing direction.
+     * Get the possible board states after rolling the dice for the current playing direction.
      *
      * @return the board states
      */
@@ -26,5 +26,12 @@ public interface TurnBasedObgEngine extends ObgEngine {
      * @throws IllegalObgActionException if an invalid board is provided
      */
     BoardSnapshot chooseBoard(Direction playingDirection, BoardSnapshot board);
+
+    /**
+     * Get a snapshot of the current board state.
+     *
+     * @return the board state
+     */
+    BoardSnapshot getCurrentBoard();
 
 }

@@ -46,6 +46,26 @@ public final class BoardSnapshot {
         return anticlockwiseSuspended;
     }
 
+    public int getCollected(Direction direction) {
+        if (direction == Direction.CLOCKWISE) {
+            return clockwiseCollected;
+        }
+        if (direction == Direction.ANTICLOCKWISE) {
+            return anticlockwiseCollected;
+        }
+        throw new IllegalArgumentException("Invalid direction provided");
+    }
+
+    public int getSuspended(Direction direction) {
+        if (direction == Direction.CLOCKWISE) {
+            return clockwiseSuspended;
+        }
+        if (direction == Direction.ANTICLOCKWISE) {
+            return anticlockwiseSuspended;
+        }
+        throw new IllegalArgumentException("Invalid direction provided");
+    }
+
     /**
      * Stream regular columns (non-suspended, non-collected) in the given direction.
      * @param direction the direction

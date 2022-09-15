@@ -58,7 +58,7 @@ public final class HybridObgEngine extends BaseObgEngine implements MixedModeObg
 
         executeSequence(executionSequence);
 
-        record Prediction(List<ObgTransition> sequence, BoardSnapshot snapshot) { //NOSONAR - attributes used in stream below
+        record Prediction(List<ObgTransition> sequence, BoardSnapshot snapshot) {
         }
         final var newPredictions = viableSequences.stream()
                 .mapMulti((List<ObgTransition> sequence, Consumer<Prediction> mapper) -> {
@@ -96,5 +96,10 @@ public final class HybridObgEngine extends BaseObgEngine implements MixedModeObg
         BoardMapper.loadSnapshot(columns, board);
         predictions.clear();
         return board;
+    }
+
+    @Override
+    public BoardSnapshot getCurrentBoard() {
+        return BoardMapper.takeSnapshot(columns);
     }
 }

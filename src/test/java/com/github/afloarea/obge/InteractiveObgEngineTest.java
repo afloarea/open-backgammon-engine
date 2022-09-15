@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InteractiveObgEngineTest {
@@ -344,6 +345,26 @@ class InteractiveObgEngineTest {
         assertTrue(engine.getPossibleMoves().containsAll(Set.of(
                 ObgMove.of("H", "D", DiceValues.of(4)),
                 ObgMove.of("H", "B", DiceValues.of(6)))));
+    }
+
+    @ParameterizedTest
+    @MethodSource("interactiveEngines")
+    void testPreferSimpleWhenCollecting(Class<? extends InteractiveObgEngine> type) {
+        final var engine = EngineUtils.buildDefault(type, new int[][]{
+                new int[]{-3, -3, -3, -2, -4, -0,       0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  2,  1,  2,  3,  4,       0, 0, 0, 1, 0, 0}
+        });
+
+        engine.applyDiceRoll(Direction.ANTICLOCKWISE, DiceRoll.of(6, 3));
+
+        assertTrue(engine.getPossibleMoves().contains(
+                ObgMove.of("E", "CW", DiceValues.of(6))
+        ));
+
+        final var transitions = engine.execute(Direction.ANTICLOCKWISE, "E", "CW");
+
+        assertEquals(1, transitions.size());
+        assertEquals(6, transitions.get(0).usedDie());
     }
 
 }

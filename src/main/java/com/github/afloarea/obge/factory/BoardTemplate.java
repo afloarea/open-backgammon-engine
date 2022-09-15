@@ -129,10 +129,6 @@ public final class BoardTemplate {
         }
 
         private static void checkTemplate(List<String> upper, List<String> lower) {
-            if (upper == null) upper = Collections.emptyList();
-            if (lower == null) lower = Collections.emptyList();
-
-
             final var idCount = Stream.concat(upper.stream(), lower.stream())
                     .map(Objects::requireNonNull)
                     .distinct()

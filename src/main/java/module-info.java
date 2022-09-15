@@ -5,4 +5,5 @@ module com.github.afloarea.obge {
     exports com.github.afloarea.obge.factory;
     exports com.github.afloarea.obge.moves;
     exports com.github.afloarea.obge.dice;
+//    exports com.github.afloarea.obge.expander; // experimental
 }

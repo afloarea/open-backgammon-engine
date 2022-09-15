@@ -47,4 +47,9 @@ public final class BoardStatePredictingObgEngine extends BaseObgEngine implement
         possibleBoards.clear();
         return board;
     }
+
+    @Override
+    public BoardSnapshot getCurrentBoard() {
+        return BoardMapper.takeSnapshot(columns);
+    }
 }
