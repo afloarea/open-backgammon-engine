@@ -28,8 +28,8 @@ class TurnBasedObgEngineTest {
 
         engine.applyDiceRoll(Direction.CLOCKWISE, diceRoll);
         final var desiredBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
-                { 0, 1, 1, 0, 0,  5,    0,  3, 0, 0, 0, -5},
-                {-2, 0, 0, 0, 0, -5,    0, -3, 0, 0, 0,  5}
+                { 0, 1, 1, 0, 0, -5,    0, -3, 0, 0, 0,  5},
+                {-2, 0, 0, 0, 0,  5,    0,  3, 0, 0, 0, -5}
         });
         engine.chooseBoard(Direction.CLOCKWISE, desiredBoard);
 
@@ -44,8 +44,8 @@ class TurnBasedObgEngineTest {
 
         engine.applyDiceRoll(Direction.CLOCKWISE, diceRoll);
         final var desiredBoard = ColumnsFactory.buildBoardSnapshot(new int[][]{
-                { 1, 0, 0, 0, 0,  5,    0,  3, 1, 0, 0, -5},
-                {-2, 0, 0, 0, 0, -5,    0, -3, 0, 0, 0,  5}
+                { 1, 0, 0, 0, 0, -5,    0, -3, 1, 0, 0,  5},
+                {-2, 0, 0, 0, 0,  5,    0,  3, 0, 0, 0, -5}
         });
         engine.chooseBoard(Direction.CLOCKWISE, desiredBoard);
 
@@ -176,7 +176,7 @@ class TurnBasedObgEngineTest {
         engine.applyDiceRoll(Direction.CLOCKWISE, DiceRoll.of(6, 5));
         final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
                 new int[]{-4, -4, -4, -3, 0, 0,     0, 0, 0, 0, 0, 0},
-                new int[]{ 5,  2,  4,  4, 0, 0,     0, 0, 0, 0, 0, 0}
+                new int[]{ 5,  2,  4,  2, 0, 0,     0, 0, 0, 0, 0, 0}
         }, 0, 0, 2, 0);
 
         assertDoesNotThrow(() -> engine.chooseBoard(Direction.CLOCKWISE, firstTurn));
@@ -197,7 +197,7 @@ class TurnBasedObgEngineTest {
         final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
                 new int[]{-2, -2, 0, -1, -1, -7,    0, 0, 0, 0, 0, 0},
                 new int[]{ 0,  0, 1,  5,  2,  6,    0, 0, 0, 0, 0, 0}
-        });
+        }, 0, 0, 1, 2);
         engine.chooseBoard(Direction.CLOCKWISE, firstTurn);
 
         assertTrue(engine.isCurrentTurnDone());
@@ -234,9 +234,9 @@ class TurnBasedObgEngineTest {
         assertEquals(7, engine.getBoardChoices().size());
 
         final var firstTurn = ColumnsFactory.buildBoardSnapshot(new int[][] {
-                new int[]{-2, -4, -3, 0, 0, 0,      0, 0, 0, 0, 0,  1},
-                new int[]{ 2,  3,  2, 2, 2, 3,      0, 0, 0, 0, 0, -1}
-        }, 0, 0, 0, 5);
+                new int[]{-2, -4, -3, 0, 0, 0,      0, 0, 0, 0, 0, 0},
+                new int[]{ 2,  3,  2, 2, 2, 4,      0, 0, 0, 0, 0, 0}
+        }, 0, 1, 0, 5);
         engine.chooseBoard(Direction.CLOCKWISE, firstTurn);
 
         assertTrue(engine.isCurrentTurnDone());

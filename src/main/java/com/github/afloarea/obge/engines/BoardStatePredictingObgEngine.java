@@ -4,6 +4,7 @@ import com.github.afloarea.obge.Direction;
 import com.github.afloarea.obge.TurnBasedObgEngine;
 import com.github.afloarea.obge.board.BoardSnapshot;
 import com.github.afloarea.obge.dice.DiceRoll;
+import com.github.afloarea.obge.exceptions.IllegalObgActionException;
 import com.github.afloarea.obge.layout.BoardMapper;
 import com.github.afloarea.obge.layout.ColumnSequence;
 import com.github.afloarea.obge.predictors.BoardPredictor;
@@ -43,6 +44,11 @@ public final class BoardStatePredictingObgEngine extends BaseObgEngine implement
     @Override
     public BoardSnapshot chooseBoard(Direction playingDirection, BoardSnapshot board) {
         checkTransitionPossible(playingDirection);
+
+        if (!possibleBoards.contains(board)) {
+            throw new IllegalObgActionException("Invalid board provided");
+        }
+
         BoardMapper.loadSnapshot(columns, board);
         possibleBoards.clear();
         return board;

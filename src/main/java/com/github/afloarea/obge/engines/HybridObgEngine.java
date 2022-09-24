@@ -15,6 +15,7 @@ import com.github.afloarea.obge.predictors.ObgPredictor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -93,9 +94,28 @@ public final class HybridObgEngine extends BaseObgEngine implements MixedModeObg
     @Override
     public BoardSnapshot chooseBoard(Direction playingDirection, BoardSnapshot board) {
         checkTransitionPossible(playingDirection);
+
+        if (!predictions.containsValue(board)) {
+            throw new IllegalObgActionException("Invalid board provided");
+        }
+
         BoardMapper.loadSnapshot(columns, board);
         predictions.clear();
         return board;
+    }
+
+    @Override
+    public List<ObgTransition> transitionTo(Direction playingDirection, BoardSnapshot boardSnapshot) {
+        checkTransitionPossible(playingDirection);
+        final var transition = predictions.entrySet().stream()
+                .filter(entry -> Objects.equals(entry.getValue(), boardSnapshot))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new IllegalObgActionException("Invalid board provided"));
+
+        BoardMapper.loadSnapshot(columns, boardSnapshot);
+        predictions.clear();
+        return transition;
     }
 
     @Override
